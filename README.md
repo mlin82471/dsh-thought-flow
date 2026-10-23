@@ -45,17 +45,47 @@
 
 ## 📦 安装与挂载
 
-进入当前 DSH desktop profile 目录或通过软链接挂载：
+### 方式一：直接在线安装（推荐）
+
+通过 DSH 自带的插件管理命令一键拉取并安装：
 
 ```bash
-cd ~/.dsh/profiles/desktop
-pnpm add link:C:/Users/linhr/code/dsh-thought-flow
+dsh plugin --profile desktop add https://github.com/mlin82471/dsh-thought-flow.git
 ```
 
-并在 `~/.dsh/profiles/desktop/package.json` 的 `dsh.profile.bundles` 中加入：
-```json
-"bundles": [
-  "...",
-  "dsh-thought-flow"
-]
+> **说明**：DSH 内置包管理器会自动解析依赖并将插件注册到 `desktop` profile 中，无需手动修改任何配置文件。
+
+---
+
+### 方式二：本地克隆与开发挂载
+
+如果你想对插件代码进行本地调试与二次开发：
+
+```bash
+# 1. 克隆代码仓库
+git clone https://github.com/mlin82471/dsh-thought-flow.git
+cd dsh-thought-flow
+
+# 2. 通过 DSH 原生 link 命令软链挂载到 desktop profile
+# Linux / macOS / Git Bash:
+dsh plugin --profile desktop add link:$(pwd)
+
+# Windows PowerShell:
+dsh plugin --profile desktop add link:$PWD
+
+# Windows CMD:
+dsh plugin --profile desktop add link:%cd%
 ```
+
+---
+
+### 验证与卸载
+
+- **查看已安装插件**：
+  ```bash
+  dsh plugin --profile desktop list
+  ```
+- **卸载插件**：
+  ```bash
+  dsh plugin --profile desktop remove dsh-thought-flow
+  ```
