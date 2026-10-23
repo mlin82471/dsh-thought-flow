@@ -182,10 +182,10 @@
     renderRounds();
   });
 
-  // 打断/恢复 (Issue 2)
+  // 打断/恢复 (Issue 2: 双重保险真实打断)
   function updateInterruptUI() {
     if (state.isPaused) {
-      lblInterrupt.textContent = '已暂停推演 (点击继续)';
+      lblInterrupt.textContent = '已暂停 (点击继续)';
       btnInterrupt.style.background = 'rgba(52, 199, 89, 0.2)';
       btnInterrupt.style.color = 'var(--tf-success)';
     } else {
@@ -200,12 +200,37 @@
     state.isPaused = !state.isPaused;
     updateInterruptUI();
     saveState();
-    var actionType = state.isPaused ? 'pause' : 'resume';
-    fetch('/dsh-thought-flow/action', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: actionType })
-    }).catch(function(){});
+
+    if (state.isPaused) {
+      // 1. 尝试触发 DSH 前端原生停止生成按钮 (极速生效)
+      var stopSelectors = [
+        'button[aria-label*="停止"]',
+        'button[aria-label*="Stop"]',
+        'button[title*="停止"]',
+        'button[title*="Stop"]',
+        '.dsh-stop-button',
+        '[data-action="stop"]'
+      ];
+      for (var i = 0; i < stopSelectors.length; i++) {
+        var nativeBtn = document.querySelector(stopSelectors[i]);
+        if (nativeBtn && typeof nativeBtn.click === 'function') {
+          try { nativeBtn.click(); } catch(e){}
+          break;
+        }
+      }
+      // 2. 向插件后台派发打断指令
+      fetch('/dsh-thought-flow/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'pause' })
+      }).catch(function(){});
+    } else {
+      fetch('/dsh-thought-flow/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'resume' })
+      }).catch(function(){});
+    }
   });
 
   // 发送人工意见 (Issue 1)
@@ -319,10 +344,18 @@
       var subList = document.createElement('div');
       subList.className = 'tf-sub-blocks-list';
 
-      // 渲染工具调用可视化卡片 (方向三: Tool Calls Visualization)
+      // 渲染工具调用可视化卡片 (折叠收拢，避免普通用户被底层 JSON 刷屏)
       if (r.tools && r.tools.length > 0) {
-        var toolsContainer = document.createElement('div');
+        var toolsContainer = document.createElement('details');
         toolsContainer.className = 'tf-tools-section';
+        toolsContainer.style.marginBottom = '10px';
+        toolsContainer.innerHTML = `
+          <summary style="font-size: 11.5px; color: var(--tf-text-muted); cursor: pointer; padding: 4px 2px; user-select: none; font-weight: 500;">
+            🔧 工具操作 (${r.tools.length} 项记录 · 点击展开)
+          </summary>
+        `;
+        var toolsInner = document.createElement('div');
+        toolsInner.style.marginTop = '6px';
         r.tools.forEach(function (tool) {
           var toolCard = document.createElement('div');
           toolCard.className = 'tf-tool-card';
@@ -340,17 +373,18 @@
               <span class="tf-tool-status ${statusClass}">${statusBadge}</span>
             </div>
             <div class="tf-tool-details" style="display: none;">
-              <div><strong>入参:</strong> ${escapeHtml(typeof tool.args === 'object' ? safeStringify(tool.args) : tool.args)}</div>
+              <div><strong>入参:</strong> ${escapeHtml(typeof tool.args === 'object' ? JSON.stringify(tool.args, null, 2) : tool.args)}</div>
               ${tool.error ? `<div style="color:var(--tf-danger);margin-top:4px;"><strong>错误:</strong> ${escapeHtml(tool.error)}</div>` : ''}
-              ${tool.result ? `<div style="margin-top:4px;"><strong>结果:</strong> ${escapeHtml(typeof tool.result === 'object' ? safeStringify(tool.result) : tool.result)}</div>` : ''}
+              ${tool.result ? `<div style="margin-top:4px;"><strong>结果:</strong> ${escapeHtml(typeof tool.result === 'object' ? JSON.stringify(tool.result, null, 2) : tool.result)}</div>` : ''}
             </div>
           `;
           toolCard.querySelector('.tf-tool-header').addEventListener('click', function () {
             var d = toolCard.querySelector('.tf-tool-details');
             d.style.display = d.style.display === 'none' ? 'block' : 'none';
           });
-          toolsContainer.appendChild(toolCard);
+          toolsInner.appendChild(toolCard);
         });
+        toolsContainer.appendChild(toolsInner);
         subList.appendChild(toolsContainer);
       }
 
@@ -555,9 +589,7 @@
         }
       });
       es.addEventListener('turn/start', function (e) {
-        state.visible = true;
-        panel.classList.add('tf-visible', '__dsh_tf__visible');
-        saveState();
+        if (indicatorEl) indicatorEl.textContent = '思考中...';
         var data = JSON.parse(e.data || '{}');
         if (data.round) {
           var exists = state.rounds.find(r => r.roundId === data.round.roundId);
@@ -650,12 +682,9 @@
       .then(function (data) {
         if (!data) return;
 
-        // Issue 4 修复：当推理启动时自动展开面板；推理结束时绝不强行自动隐藏面板，让用户从容审阅
-        if (data.isThinking && !wasThinking) {
-          state.visible = true;
-          panel.classList.add('tf-visible');
-          panel.classList.add('__dsh_tf__visible');
-          saveState();
+        // 仅静默更新胶囊状态，绝不自动强行弹窗遮挡用户视线
+        if (data.isThinking && indicatorEl) {
+          indicatorEl.textContent = '思考中...';
         }
         wasThinking = !!data.isThinking;
 
