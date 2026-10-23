@@ -1,0 +1,30 @@
+{
+  "name": "dsh-thought-flow",
+  "version": "1.0.0",
+  "description": "DeepSeek Harness 苹果毛玻璃质感思考流可视化与实时人机干预插件",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "reasoning",
+    "thought-flow",
+    "glassmorphism"
+  ],
+  "type": "module",
+  "main": "lib/index.js",
+  "files": [
+    "lib",
+    "assets",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "license": "MIT"
+}
