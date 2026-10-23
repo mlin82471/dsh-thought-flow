@@ -65,21 +65,6 @@
         <span id="tf-interrupt-label">打断思考</span>
       </button>
     </div>
-    
-    <!-- 详情/编辑 Modal 对话框 -->
-    <div id="tf-modal-overlay">
-      <div class="tf-modal-dialog">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <b id="tf-modal-title" style="font-size:15px;">操作思考方块</b>
-          <button class="tf-btn-icon" id="tf-modal-close">✕</button>
-        </div>
-        <textarea class="tf-modal-textarea" id="tf-modal-text"></textarea>
-        <div style="display:flex; justify-content:flex-end; gap:10px;">
-          <button class="tf-action-btn" id="tf-modal-cancel" style="background:rgba(0,0,0,0.06);">取消</button>
-          <button class="tf-action-btn tf-btn-primary" id="tf-modal-save">保存修改</button>
-        </div>
-      </div>
-    </div>
   `;
   root.appendChild(panel);
 
@@ -102,31 +87,6 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'clear' })
     }).catch(function(){});
-    renderRounds();
-  });
-
-  // Modal 弹窗交互
-  var modalOverlay = document.getElementById('tf-modal-overlay');
-  var modalText = document.getElementById('tf-modal-text');
-  var modalTitle = document.getElementById('tf-modal-title');
-  document.getElementById('tf-modal-close').addEventListener('click', closeModal);
-  document.getElementById('tf-modal-cancel').addEventListener('click', closeModal);
-  function closeModal() {
-    modalOverlay.classList.remove('active');
-    state.editingBlock = null;
-  }
-  document.getElementById('tf-modal-save').addEventListener('click', function () {
-    if (!state.editingBlock) return;
-    var newVal = modalText.value.trim();
-    if (newVal) {
-      state.editingBlock.content = newVal;
-      fetch('/dsh-thought-flow/action', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'edit_block', blockId: state.editingBlock.id, content: newVal })
-      }).catch(function(){});
-    }
-    closeModal();
     renderRounds();
   });
 
@@ -189,7 +149,7 @@
     if (e.key === 'Enter') submitOpinion();
   });
 
-  // 渲染所有多轮思考（第1次思考 -> 第2次思考 -> 第3次思考...）
+  // 渲染水平多轮推演画板（第一次思考 -> 第二次思考 -> 第三次思考...）
   function renderRounds() {
     var container = document.getElementById('tf-blocks-list');
     var tabs = document.getElementById('tf-round-tabs');
@@ -197,7 +157,7 @@
 
     var rounds = state.rounds || [];
     if (!rounds.length) {
-      container.innerHTML = `<div style="text-align: center; color: var(--tf-text-muted); font-size: 13px; margin-top: 50px;">等待思维链启动推演...</div>`;
+      container.innerHTML = `<div style="text-align: center; color: var(--tf-text-muted); font-size: 13px; margin: auto;">等待思维链启动推演...</div>`;
       tabs.innerHTML = '';
       indicator.textContent = '准备就绪';
       return;
@@ -205,125 +165,100 @@
 
     indicator.textContent = `第 ${rounds.length} 轮思考`;
 
-    // 渲染顶部轮次切换 Tab
+    // 渲染顶部轮次快捷指示
     tabs.innerHTML = '';
     rounds.forEach(function (r, rIdx) {
       var tab = document.createElement('div');
       tab.className = 'tf-round-tab' + (rIdx === state.activeRoundIndex ? ' active' : '');
-      tab.textContent = r.title || `思考 #${rIdx + 1}`;
+      tab.textContent = r.title || `第 ${rIdx + 1} 次思考`;
       tab.addEventListener('click', function () {
         state.activeRoundIndex = rIdx;
-        renderRounds();
+        var col = document.getElementById('tf-round-col-' + rIdx);
+        if (col) col.scrollIntoView({ behavior: 'smooth', inline: 'center' });
       });
       tabs.appendChild(tab);
     });
 
     container.innerHTML = '';
 
-    // 展示历史与当前思考
+    // 水平生成各个思考轮次大卡片
     rounds.forEach(function (r, rIdx) {
-      var isCurrent = (rIdx === state.activeRoundIndex);
-      var group = document.createElement('div');
-      group.className = 'tf-round-section';
-      if (!isCurrent) {
-        group.style.opacity = '0.75';
-      }
+      var col = document.createElement('div');
+      col.className = 'tf-round-column';
+      col.id = 'tf-round-col-' + rIdx;
 
-      var header = document.createElement('div');
-      header.className = 'tf-round-badge';
-      header.innerHTML = `
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        <span>${escapeHtml(r.title)}</span>
-        <span style="font-size:11px; opacity:0.6; font-weight:normal;">(${r.blocks.length} 个思维方块)</span>
+      // 卡片顶部标题
+      var colHeader = document.createElement('div');
+      colHeader.className = 'tf-round-col-header';
+      colHeader.innerHTML = `
+        <div class="tf-round-col-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          <span>${escapeHtml(r.title)}</span>
+        </div>
+        <span style="font-size:11px; opacity:0.65; color:var(--tf-text-muted);">${r.blocks.length} 个核心要点</span>
       `;
-      group.appendChild(header);
+      col.appendChild(colHeader);
 
-      var row = document.createElement('div');
-      row.className = 'tf-round-row';
+      // 卡片内部的思考要点列表
+      var subList = document.createElement('div');
+      subList.className = 'tf-sub-blocks-list';
 
       if (!r.blocks.length) {
-        row.innerHTML = `<span style="font-size:12px; color:var(--tf-text-muted); padding:8px 0;">该轮次暂无思考节点</span>`;
+        subList.innerHTML = `<span style="font-size:12px; color:var(--tf-text-muted); margin:auto;">推演生成中...</span>`;
       } else {
         r.blocks.forEach(function (b, bIdx) {
-          // 渲染方块
           var card = document.createElement('div');
           card.className = 'tf-block-card';
-          card.draggable = true;
 
           if (b.isHuman) {
             card.style.borderColor = 'var(--tf-success)';
-            card.style.background = 'rgba(52, 199, 89, 0.08)';
+            card.style.background = 'rgba(52, 199, 89, 0.1)';
           }
 
           card.innerHTML = `
             <div class="tf-block-header">
               <div class="tf-block-tag">
-                <span class="tf-block-num" style="${b.isHuman ? 'background: var(--tf-success);' : ''}">${b.step}</span>
+                <span class="tf-block-step-num" style="${b.isHuman ? 'background: var(--tf-success);' : ''}">${b.step}</span>
                 <span class="tf-block-title">${escapeHtml(b.title)}</span>
               </div>
-              <button class="tf-btn-icon tf-block-btn-edit" style="width:22px;height:22px;" title="查看/编辑详细思考">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
-              </button>
             </div>
-            <div class="tf-block-content" title="点击查看详情与直接修改">${escapeHtml(b.content)}</div>
-            <div class="tf-block-footer">
-              <span style="font-size:10.5px; color:var(--tf-text-muted);">步骤 ${bIdx + 1}</span>
-              <button class="tf-action-link tf-open-modal">编辑 / 介入</button>
-            </div>
+            <div class="tf-block-content" contenteditable="true" spellcheck="false">${escapeHtml(b.content)}</div>
           `;
 
-          // 拖拽排序/移动交互
-          card.addEventListener('dragstart', function (e) {
-            e.dataTransfer.setData('text/plain', JSON.stringify({ rIdx: rIdx, bIdx: bIdx }));
-          });
-          card.addEventListener('dragover', function (e) {
-            e.preventDefault();
-          });
-          card.addEventListener('drop', function (e) {
-            e.preventDefault();
-            try {
-              var data = JSON.parse(e.dataTransfer.getData('text/plain'));
-              if (data.rIdx === rIdx && data.bIdx !== bIdx) {
-                var item = r.blocks.splice(data.bIdx, 1)[0];
-                r.blocks.splice(bIdx, 0, item);
-                renderRounds();
-              }
-            } catch (err) {}
+          // 直接上手编辑修改：失焦时保存
+          var contentEl = card.querySelector('.tf-block-content');
+          contentEl.addEventListener('blur', function () {
+            var newVal = contentEl.innerText.trim();
+            if (newVal && newVal !== b.content) {
+              b.content = newVal;
+              fetch('/dsh-thought-flow/action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'edit_block', blockId: b.id, content: newVal })
+              }).catch(function(){});
+            }
           });
 
-          // 点击打开详情 Modal
-          function openBlockModal() {
-            state.editingBlock = b;
-            modalTitle.textContent = `${r.title} - ${b.title}`;
-            modalText.value = b.content;
-            modalOverlay.classList.add('active');
-            modalText.focus();
-          }
-          card.querySelector('.tf-block-content').addEventListener('click', openBlockModal);
-          card.querySelector('.tf-block-btn-edit').addEventListener('click', openBlockModal);
-          card.querySelector('.tf-open-modal').addEventListener('click', openBlockModal);
-
-          row.appendChild(card);
-
-          // 步骤之间的箭头连接
-          if (bIdx < r.blocks.length - 1) {
-            var arrow = document.createElement('div');
-            arrow.className = 'tf-flow-arrow';
-            arrow.innerHTML = `
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-            `;
-            row.appendChild(arrow);
-          }
+          subList.appendChild(card);
         });
       }
 
-      group.appendChild(row);
-      container.appendChild(group);
+      col.appendChild(subList);
+      container.appendChild(col);
+
+      // 如果有后续轮次，渲染中间的水平大衔接箭头
+      if (rIdx < rounds.length - 1) {
+        var conn = document.createElement('div');
+        conn.className = 'tf-round-connector';
+        conn.innerHTML = `
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="12" x2="20" y2="12"></line><polyline points="14 6 20 12 14 18"></polyline></svg>
+        `;
+        container.appendChild(conn);
+      }
     });
 
-    if (container.lastElementChild) {
-      container.scrollTop = container.scrollHeight;
-    }
+    // 默认滑向最右侧最新的思考大卡片
+    container.scrollLeft = container.scrollWidth;
   }
 
   function escapeHtml(s) {
@@ -331,11 +266,24 @@
   }
 
   // 轮询或事件监听
+  var wasThinking = false;
   function pollSync() {
     fetch('/dsh-thought-flow/sync', { cache: 'no-store' })
       .then(function (res) { return res.json(); })
       .then(function (data) {
-        if (data && data.rounds) {
+        if (!data) return;
+
+        // 只有正在思考时自动展开；思考完后若想再看需手动点击
+        if (data.isThinking && !wasThinking) {
+          state.visible = true;
+          panel.classList.add('tf-visible');
+        } else if (!data.isThinking && wasThinking) {
+          state.visible = false;
+          panel.classList.remove('tf-visible');
+        }
+        wasThinking = !!data.isThinking;
+
+        if (data.rounds) {
           var roundsJson = JSON.stringify(data.rounds);
           if (roundsJson !== JSON.stringify(state.rounds)) {
             state.rounds = data.rounds;

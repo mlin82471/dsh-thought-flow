@@ -28,16 +28,16 @@
   }
 }
 
-/* Floating Capsule Bar (靠左停靠，不挡发送区) */
+/* Floating Capsule Bar (位置上提至 bottom: 90px，避免贴底冲突) */
 #tf-float-bar {
   position: fixed;
-  bottom: 24px;
+  bottom: 90px;
   left: 24px;
   z-index: 999999;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 16px;
+  padding: 9px 18px;
   border-radius: 999px;
   background: var(--tf-bg-glass);
   backdrop-filter: blur(var(--tf-blur)) saturate(190%);
@@ -80,15 +80,15 @@
   color: var(--tf-accent);
 }
 
-/* Main Flow Panel: 苹果应用 App 展开弹出动效 (从左下角胶囊位置像 iOS 图标一样弹开) */
+/* Main Flow Panel: 更宽更广的专业大画板 (960px x 640px) */
 #tf-flow-panel {
   position: fixed;
-  bottom: 76px;
+  bottom: 145px;
   left: 24px;
-  width: 820px;
+  width: 960px;
   max-width: calc(100vw - 48px);
-  height: 540px;
-  max-height: calc(100vh - 120px);
+  height: 640px;
+  max-height: calc(100vh - 180px);
   z-index: 999998;
   display: flex;
   flex-direction: column;
@@ -161,87 +161,96 @@
   transform: scale(1.08);
 }
 
-/* Blocks Stream Container & Multi-Round Flow */
+/* 整体画板：完全水平铺开多轮推演 (Horizontal Multi-Round Flow) */
 .tf-blocks-container {
   flex: 1;
-  overflow-y: auto;
-  padding: 20px 24px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 24px 28px;
   display: flex;
-  flex-direction: column;
-  gap: 20px;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 24px;
 }
 
-/* 轮次沉淀区 */
-.tf-round-section {
+/* 一次完整的思考归结为一个优雅的大卡片 */
+.tf-round-column {
+  width: 320px;
+  min-width: 320px;
+  height: 100%;
+  max-height: 440px;
+  display: flex;
+  flex-direction: column;
+  background: var(--tf-bg-glass-card);
+  border: 1px solid var(--tf-border-glass);
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  padding: 18px 20px;
+  position: relative;
+  transition: transform 0.25s, box-shadow 0.25s;
+  animation: tf-card-in 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.tf-round-column:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px var(--tf-accent-glow);
+}
+
+.tf-round-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--tf-border-subtle);
+}
+
+.tf-round-col-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--tf-accent);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tf-sub-blocks-list {
+  flex: 1;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: rgba(255, 255, 255, 0.22);
-  border: 1px solid var(--tf-border-subtle);
-  border-radius: 22px;
-  padding: 16px 20px;
+  padding-right: 4px;
 }
 
-.tf-round-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--tf-accent);
-}
-
-.tf-round-row {
+/* 轮次之间的水平贯穿大箭头 */
+.tf-round-connector {
   display: flex;
   align-items: center;
-  gap: 14px;
-  overflow-x: auto;
-  padding-bottom: 8px;
-}
-
-/* 连线与向导箭头 */
-.tf-flow-arrow {
-  display: flex;
-  align-items: center;
+  justify-content: center;
   color: var(--tf-accent);
-  opacity: 0.65;
+  opacity: 0.7;
   flex-shrink: 0;
   animation: tf-arrow-pulse 2s infinite ease-in-out;
 }
 
-@keyframes tf-arrow-pulse {
-  0% { transform: translateX(0); opacity: 0.4; }
-  50% { transform: translateX(4px); opacity: 1; }
-  100% { transform: translateX(0); opacity: 0.4; }
-}
-
-/* Thought Block (Apple Tile Style - 可拖拽可移动) */
+/* Thought Block (卡片内的核心思考节点) */
 .tf-block-card {
-  width: 240px;
-  min-width: 240px;
-  height: 155px;
-  position: relative;
-  background: var(--tf-bg-glass-card);
-  border: 1px solid var(--tf-border-glass);
-  border-radius: 18px;
-  padding: 14px 16px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid var(--tf-border-subtle);
+  border-radius: 14px;
+  padding: 12px 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
   cursor: grab;
-  transition: box-shadow 0.25s, border-color 0.25s, transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
-  animation: tf-card-in 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  transition: all 0.2s;
   user-select: none;
 }
 
-.tf-block-card:active {
-  cursor: grabbing;
-}
-
 .tf-block-card:hover {
-  transform: translateY(-4px) scale(1.02);
+  background: rgba(255, 255, 255, 0.65);
   border-color: var(--tf-accent);
-  box-shadow: 0 12px 28px rgba(0, 113, 227, 0.18);
 }
 
 .tf-block-header {
@@ -252,12 +261,11 @@
 }
 
 .tf-block-tag {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 12px;
-  font-weight: 600;
-  color: var(--tf-accent);
+  font-weight: 700;
 }
 
 .tf-block-step-num {
@@ -265,7 +273,7 @@
   height: 20px;
   border-radius: 6px;
   background: var(--tf-accent);
-  color: #fff;
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -276,43 +284,27 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--tf-text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 170px;
 }
 
 .tf-block-content {
-  flex: 1;
   font-size: 12px;
   line-height: 1.5;
   color: var(--tf-text-main);
   opacity: 0.9;
   word-break: break-word;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-  cursor: pointer;
+  white-space: pre-wrap;
+  outline: none;
+  border-radius: 6px;
+  padding: 4px;
 }
 
-.tf-block-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 6px;
-  padding-top: 6px;
-  border-top: 1px solid var(--tf-border-subtle);
-}
-
-.tf-block-btn-edit {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--tf-accent);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-}
-
-.tf-block-btn-edit:hover {
-  text-decoration: underline;
+.tf-block-content[contenteditable="true"] {
+  background: rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 0 0 1px var(--tf-accent);
 }
 
 .tf-block-editor {
