@@ -17,11 +17,31 @@
    - **直接上手修改**：点击任意方块上的编辑按钮，可直接原地修改思考内容。
    - **插入指导意见**：随时追加人类意图，校准思考方向。
 
-4. **强制中文约束**：
+4. **强制中文约束与防膨胀**：
    - 系统级注入中文思考规则，确保 Reasoning 过程全程保持纯正中文。
+   - 具备幂等去重检查，避免多轮装配时 System Prompt 指令无限叠加。
 
-5. **无缝集成与随时开关**：
-   - 右下角精美悬浮胶囊控制条，支持一键呼出与折叠。
+5. **实时人机干预与会话真正打断**：
+   - **真实打断/暂停**：与底层 `session.abort()` / `session.cancel()` 深度打通，打断时真正中止模型推演请求。
+   - **用户指导意见注入**：前端提交的指导建议直接进入下一次 `system-prompt/assemble`，真正指导后续模型生成。
+   - **直接原地编辑**：点击任意方块原地修改思考内容，具备富文本纯文本清洗与防 XSS 保护。
+
+6. **高性能增量渲染与离线持久化**：
+   - 去除全量 DOM 销毁重建，增加轻量签名比对与输入焦点保护。
+   - 前端集成 `localStorage` 状态持久化，刷新后自动恢复。
+   - 思考结束后面板保持打开，供用户从容审阅。
+
+7. **健康诊断与日志聚合**：
+   - 提供 `/dsh-thought-flow/status` 诊断接口与轻量级环形日志缓冲。
+
+## 🌐 接口协议
+
+- `GET  /dsh-thought-flow/thought-flow.js`：前端脚本分发
+- `GET  /dsh-thought-flow/thought-flow.css`：苹果毛玻璃样式表
+- `GET  /dsh-thought-flow/sync`：实时思考轮次与状态同步
+- `GET  /dsh-thought-flow/stream`：Server-Sent Events (SSE) 实时流式推送
+- `POST /dsh-thought-flow/action`：控制操作（`pause`, `resume`, `opinion`, `edit_block`, `clear`）
+- `GET  /dsh-thought-flow/status`：插件运行统计与错误日志
 
 ## 📦 安装与挂载
 

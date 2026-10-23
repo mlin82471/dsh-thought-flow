@@ -15,6 +15,9 @@
 }
 
 @media (prefers-color-scheme: dark) {
+  #__dsh_tf__flow_panel, #tf-flow-panel {
+    background: linear-gradient(135deg, rgba(28, 28, 44, 0.78), rgba(22, 22, 36, 0.84)), var(--tf-bg-glass);
+  }
   :root {
     --tf-bg-glass: rgba(30, 30, 35, 0.65);
     --tf-bg-glass-card: rgba(45, 45, 52, 0.75);
@@ -29,10 +32,11 @@
 }
 
 /* Floating Capsule Bar (位置上提至 bottom: 90px，避免贴底冲突) */
-#tf-float-bar {
+#tf-float-bar,
+#__dsh_tf__float_bar {
   position: fixed;
-  bottom: 90px;
-  left: 24px;
+  bottom: 140px;
+  left: 80px;
   z-index: 999999;
   display: flex;
   align-items: center;
@@ -51,9 +55,10 @@
   transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-#tf-float-bar:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: var(--tf-shadow-glass), 0 0 20px var(--tf-accent-glow);
+#tf-float-bar:hover,
+#__dsh_tf__float_bar:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: var(--tf-shadow-glass), 0 0 28px var(--tf-accent-glow), 0 4px 12px rgba(0,0,0,0.06);
 }
 
 .tf-pulse-dot {
@@ -66,9 +71,8 @@
 }
 
 @keyframes tf-pulse {
-  0% { transform: scale(0.9); opacity: 0.7; }
-  50% { transform: scale(1.25); opacity: 1; filter: drop-shadow(0 0 6px var(--tf-accent)); }
-  100% { transform: scale(0.9); opacity: 0.7; }
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%  { opacity: 1; transform: scale(1.12); filter: drop-shadow(0 0 8px var(--tf-accent)); }
 }
 
 .tf-badge {
@@ -81,18 +85,19 @@
 }
 
 /* Main Flow Panel: 更宽更广的专业大画板 (960px x 640px) */
-#tf-flow-panel {
+#tf-flow-panel,
+#__dsh_tf__flow_panel {
   position: fixed;
-  bottom: 145px;
-  left: 24px;
+  bottom: 195px;
+  left: 80px;
   width: 960px;
   max-width: calc(100vw - 48px);
   height: 640px;
-  max-height: calc(100vh - 180px);
+  max-height: calc(100vh - 230px);
   z-index: 999998;
   display: flex;
   flex-direction: column;
-  border-radius: 28px;
+  border-radius: 24px;
   background: var(--tf-bg-glass);
   backdrop-filter: blur(var(--tf-blur)) saturate(200%);
   -webkit-backdrop-filter: blur(var(--tf-blur)) saturate(200%);
@@ -111,7 +116,9 @@
   transition: transform 0.48s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.32s ease, filter 0.32s ease;
 }
 
-#tf-flow-panel.tf-visible {
+#tf-flow-panel.tf-visible,
+#__dsh_tf__flow_panel.tf-visible,
+#__dsh_tf__flow_panel.__dsh_tf__visible {
   opacity: 1;
   pointer-events: auto;
   transform: scale(1) translateY(0);
@@ -124,7 +131,9 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  border-bottom: 1px solid var(--tf-border-subtle);
+  border-bottom: none;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.04), transparent);
+  box-shadow: 0 1px 0 var(--tf-border-subtle);
 }
 
 .tf-panel-title {
@@ -382,4 +391,294 @@
 
 .tf-btn-danger:hover {
   background: rgba(255, 59, 48, 0.25);
+}
+
+/* ==========================================================================
+   业界进化方向扩展样式 (SSE 流式打字、工具卡片、Token 耗时条、双栏对照)
+   ========================================================================== */
+
+/* Apple HIG 动效：卡片入场 Stagger 阶梯式弹入 */
+@keyframes tf-stagger-in {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.tf-block-card {
+  animation: tf-stagger-in 0.36s cubic-bezier(0.25, 1, 0.5, 1) both;
+  animation-delay: calc(var(--block-idx, 0) * 40ms);
+}
+
+/* 流式打字光标 */
+.tf-typing-cursor {
+  display: inline-block;
+  width: 5px;
+  height: 13px;
+  background: var(--tf-accent);
+  border-radius: 2px;
+  margin-left: 3px;
+  vertical-align: middle;
+  animation: tf-blink 0.9s infinite ease-in-out;
+}
+
+@keyframes tf-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* 工具调用可视化卡片 (Cursor 风格) */
+.tf-tool-card {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--tf-border-subtle);
+  border-radius: 12px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  .tf-tool-card {
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
+.tf-tool-card:hover {
+  border-color: var(--tf-accent);
+  background: rgba(0, 113, 227, 0.05);
+}
+
+.tf-tool-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.tf-tool-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--tf-text-main);
+}
+
+.tf-tool-status {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tf-tool-status.running {
+  background: rgba(0, 113, 227, 0.15);
+  color: var(--tf-accent);
+}
+
+.tf-tool-status.success {
+  background: rgba(52, 199, 89, 0.15);
+  color: var(--tf-success);
+}
+
+.tf-tool-status.error {
+  background: rgba(255, 59, 48, 0.15);
+  color: var(--tf-danger);
+}
+
+.tf-tool-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+.tf-tool-details {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--tf-border-subtle);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  color: var(--tf-text-muted);
+  max-height: 120px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* 轮次底部的 Token 统计与耗时瀑布条 (Langfuse 风格) */
+.tf-stats-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  margin-top: auto;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.03);
+  font-size: 11px;
+  color: var(--tf-text-muted);
+  border-top: 1px solid var(--tf-border-subtle);
+}
+
+@media (prefers-color-scheme: dark) {
+  .tf-stats-bar {
+    background: rgba(255, 255, 255, 0.03);
+  }
+}
+
+.tf-stats-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tf-stats-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 思考 ↔ 回复双栏对照模式切换 */
+.tf-dual-toggle-btn {
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border-radius: 999px;
+  border: 1px solid var(--tf-border-glass);
+  background: rgba(120, 120, 128, 0.1);
+  color: var(--tf-text-main);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s;
+}
+
+.tf-dual-toggle-btn:hover {
+  background: rgba(120, 120, 128, 0.2);
+}
+
+.tf-dual-toggle-btn.active {
+  background: var(--tf-accent);
+  color: white;
+  border-color: var(--tf-accent);
+}
+
+.tf-reply-column {
+  width: 320px;
+  min-width: 320px;
+  height: 100%;
+  max-height: 440px;
+  display: flex;
+  flex-direction: column;
+  background: var(--tf-bg-glass-card);
+  border: 1px solid var(--tf-border-glass);
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  padding: 18px 20px;
+  animation: tf-card-in 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.tf-reply-body {
+  flex: 1;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--tf-text-main);
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding-right: 4px;
+}
+
+
+/* ── 滚动条美化 ── */
+.tf-blocks-container::-webkit-scrollbar,
+.tf-reply-body::-webkit-scrollbar { height: 5px; width: 5px; }
+.tf-blocks-container::-webkit-scrollbar-track,
+.tf-reply-body::-webkit-scrollbar-track { background: transparent; }
+.tf-blocks-container::-webkit-scrollbar-thumb,
+.tf-reply-body::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 140, 0.22);
+  border-radius: 999px;
+}
+.tf-blocks-container::-webkit-scrollbar-thumb:hover,
+.tf-reply-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 140, 0.38);
+}
+
+/* ── Block 卡片 hover 微提升 ── */
+.tf-block-card {
+  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.tf-block-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.07), 0 2px 6px rgba(0, 0, 0, 0.04);
+  border-color: var(--tf-accent-glow);
+}
+
+/* ── Block 复制按钮 ── */
+.tf-block-header {
+  position: relative;
+}
+.tf-block-copy-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(128, 128, 140, 0.08);
+  color: var(--tf-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+.tf-block-card:hover .tf-block-copy-btn { opacity: 1; }
+.tf-block-copy-btn:hover {
+  background: var(--tf-accent);
+  color: #fff;
+}
+.tf-block-copy-btn:active { transform: translateY(-50%) scale(0.92); }
+
+/* ── 已复制反馈 ── */
+.tf-block-copy-btn.copied {
+  background: var(--tf-success);
+  color: #fff;
+}
+
+/* ── 面板 resize 拖拽手柄 ── */
+#__dsh_tf__resize_handle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 18px;
+  height: 18px;
+  cursor: nwse-resize;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+#__dsh_tf__flow_panel:hover #__dsh_tf__resize_handle,
+#__dsh_tf__flow_panel.__dsh_tf__visible:hover #__dsh_tf__resize_handle { opacity: 0.6; }
+#__dsh_tf__resize_handle::after {
+  content: '';
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid var(--tf-text-muted);
+  border-bottom: 2px solid var(--tf-text-muted);
 }
