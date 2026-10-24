@@ -1,18 +1,352 @@
-/* Apple Liquid Frosted Glass UI Styles */
+/* ==========================================================================
+   ThoughtFlow Inline Component for DeepSeek Harness (DSH)
+   Apple Design Language · Frosted Glass · Natural Conversation Integration
+   ========================================================================== */
+
 :root {
-  --tf-blur: 28px;
-  --tf-bg-glass: rgba(255, 255, 255, 0.45);
-  --tf-bg-glass-card: rgba(255, 255, 255, 0.55);
-  --tf-border-glass: rgba(255, 255, 255, 0.65);
-  --tf-border-subtle: rgba(0, 0, 0, 0.08);
+  --tf-bg-glass: rgba(255, 255, 255, 0.72);
+  --tf-bg-glass-card: rgba(255, 255, 255, 0.6);
+  --tf-border-glass: rgba(255, 255, 255, 0.45);
+  --tf-border-subtle: rgba(0, 0, 0, 0.06);
   --tf-text-main: #1d1d1f;
   --tf-text-muted: #86868b;
   --tf-accent: #0071e3;
-  --tf-accent-glow: rgba(0, 113, 227, 0.35);
-  --tf-danger: #ff3b30;
+  --tf-accent-glow: rgba(0, 113, 227, 0.25);
   --tf-success: #34c759;
-  --tf-shadow-glass: 0 16px 36px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.8);
+  --tf-danger: #ff3b30;
+  --tf-danger-bg: rgba(255, 59, 48, 0.12);
+  --tf-blur: 24px;
 }
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tf-bg-glass: rgba(28, 28, 30, 0.78);
+    --tf-bg-glass-card: rgba(44, 44, 46, 0.75);
+    --tf-border-glass: rgba(255, 255, 255, 0.12);
+    --tf-border-subtle: rgba(255, 255, 255, 0.08);
+    --tf-text-main: #f5f5f7;
+    --tf-text-muted: #a1a1a6;
+    --tf-accent: #2997ff;
+    --tf-accent-glow: rgba(41, 151, 255, 0.35);
+  }
+}
+
+/* 隐藏官方原生简陋的灰色 reasoning 折叠块 */
+[data-variant="think"] > div:not([data-tf-mounted="true"]),
+._3GBCTG_root > div:not([data-tf-mounted="true"]) {
+  display: none !important;
+}
+
+/* 确保父容器无缝贴合我们的组件 */
+[data-variant="think"],
+._3GBCTG_root {
+  contain: none !important;
+  height: auto !important;
+  margin-bottom: 14px !important;
+}
+
+/* 原生注入的思考流卡片容器 */
+.tf-inline-card {
+  width: 100%;
+  border-radius: 16px;
+  background: var(--tf-bg-glass);
+  backdrop-filter: blur(var(--tf-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--tf-blur)) saturate(180%);
+  border: 1px solid var(--tf-border-glass);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(255, 255, 255, 0.08);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
+  color: var(--tf-text-main);
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  box-sizing: border-box;
+}
+
+.tf-inline-card:hover {
+  border-color: var(--tf-accent);
+  box-shadow: 0 8px 24px var(--tf-accent-glow);
+}
+
+/* 顶部交互胶囊栏 (点击可展开/收起) */
+.tf-inline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  cursor: pointer;
+  user-select: none;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.04), transparent);
+  border-bottom: 1px solid transparent;
+  transition: background 0.2s;
+}
+
+.tf-inline-card[data-expanded="true"] .tf-inline-header {
+  border-bottom-color: var(--tf-border-subtle);
+}
+
+.tf-inline-header:hover {
+  background: rgba(120, 120, 128, 0.08);
+}
+
+.tf-inline-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+/* 呼吸光点 */
+.tf-pulse-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--tf-accent);
+  box-shadow: 0 0 8px var(--tf-accent);
+  flex-shrink: 0;
+}
+
+.tf-pulse-dot.running {
+  animation: tf-pulse 1.8s infinite cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+.tf-pulse-dot.done {
+  background: var(--tf-success);
+  box-shadow: 0 0 6px var(--tf-success);
+}
+
+@keyframes tf-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%  { opacity: 1; transform: scale(1.2); filter: drop-shadow(0 0 6px var(--tf-accent)); }
+}
+
+.tf-inline-title {
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.tf-inline-summary {
+  font-size: 12.5px;
+  color: var(--tf-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 8px;
+}
+
+/* 右侧元数据与箭头 */
+.tf-inline-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.tf-inline-tag {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: rgba(0, 113, 227, 0.12);
+  color: var(--tf-accent);
+  font-weight: 500;
+}
+
+.tf-inline-arrow {
+  width: 14px;
+  height: 14px;
+  color: var(--tf-text-muted);
+  transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.tf-inline-card[data-expanded="true"] .tf-inline-arrow {
+  transform: rotate(180deg);
+}
+
+/* 展开后的主体内容区 */
+.tf-inline-body {
+  display: none;
+  padding: 14px 16px;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.015);
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.tf-inline-card[data-expanded="true"] .tf-inline-body {
+  display: flex;
+  animation: tf-expand 0.25s ease-out;
+}
+
+@keyframes tf-expand {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 步骤块 */
+.tf-step-block {
+  background: var(--tf-bg-glass-card);
+  border: 1px solid var(--tf-border-subtle);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.tf-step-block:hover {
+  border-color: var(--tf-accent);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+@media (prefers-color-scheme: dark) {
+  .tf-step-block:hover {
+    background: rgba(58, 58, 60, 0.9);
+  }
+}
+
+.tf-step-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tf-step-badge {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--tf-accent);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tf-step-num {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  background: var(--tf-accent);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.tf-step-copy-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--tf-text-muted);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  opacity: 0.6;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.tf-step-copy-btn:hover {
+  opacity: 1;
+  transform: scale(1.1);
+  color: var(--tf-accent);
+}
+
+.tf-step-content {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--tf-text-main);
+  white-space: pre-wrap;
+  word-break: break-word;
+  outline: none;
+}
+
+.tf-step-content[contenteditable="true"]:focus {
+  background: rgba(0, 113, 227, 0.05);
+  border-radius: 6px;
+  box-shadow: 0 0 0 1.5px var(--tf-accent);
+}
+
+/* 工具卡片 */
+.tf-tools-fold {
+  margin-bottom: 4px;
+}
+
+.tf-tools-summary {
+  font-size: 11.5px;
+  color: var(--tf-text-muted);
+  cursor: pointer;
+  padding: 4px 0;
+  user-select: none;
+  font-weight: 500;
+}
+
+.tf-tool-item {
+  background: var(--tf-bg-glass-card);
+  border: 1px solid var(--tf-border-subtle);
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-top: 6px;
+  font-size: 11.5px;
+}
+
+.tf-tool-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.tf-tool-name {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tf-tool-status {
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 10px;
+  background: rgba(120, 120, 128, 0.15);
+}
+
+.tf-tool-status.success {
+  background: rgba(52, 199, 89, 0.15);
+  color: var(--tf-success);
+}
+
+.tf-tool-detail-box {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--tf-border-subtle);
+  font-family: monospace;
+  font-size: 11px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  display: none;
+}
+
+/* 底部状态条 */
+.tf-inline-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-top: 1px solid var(--tf-border-subtle);
+  font-size: 11.5px;
+  color: var(--tf-text-muted);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.tf-inline-stats {
+  display: flex;
+  gap: 12px;
+}
+
 
 @media (prefers-color-scheme: dark) {
   #__dsh_tf__flow_panel, #tf-flow-panel {
@@ -31,28 +365,11 @@
   }
 }
 
-/* Floating Capsule Bar (位置上提至 bottom: 90px，避免贴底冲突) */
 #tf-float-bar,
-#__dsh_tf__float_bar {
-  position: fixed;
-  bottom: 140px;
-  left: 80px;
-  z-index: 999999;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 9px 18px;
-  border-radius: 999px;
-  background: var(--tf-bg-glass);
-  backdrop-filter: blur(var(--tf-blur)) saturate(190%);
-  -webkit-backdrop-filter: blur(var(--tf-blur)) saturate(190%);
-  border: 1px solid var(--tf-border-glass);
-  box-shadow: var(--tf-shadow-glass);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
-  color: var(--tf-text-main);
-  user-select: none;
-  cursor: pointer;
-  transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+#__dsh_tf__float_bar,
+#tf-flow-panel,
+#__dsh_tf__flow_panel {
+  display: none !important;
 }
 
 #tf-float-bar:hover,

@@ -64,16 +64,17 @@
 
   loadPersistedState();
 
-  // 创建 DOM 容器 (使用隔离的前缀，解决 Issue 9 全局 ID 污染)
+  // 创建 DOM 容器
   var root = document.createElement('div');
   root.id = '__dsh_tf__root';
   root.className = 'tf-plugin-root';
   document.body.appendChild(root);
 
-  // 1. 悬浮胶囊控制条 (靠左停靠)
+  // 1. 悬浮胶囊控制条 (默认隐藏)
   var floatBar = document.createElement('div');
   floatBar.id = '__dsh_tf__float_bar';
   floatBar.className = 'tf-float-bar';
+  floatBar.style.display = 'none';
   floatBar.innerHTML = `
     <div class="tf-pulse-dot"></div>
     <span style="font-size: 13px; font-weight: 600;">思维流</span>
@@ -82,19 +83,18 @@
   root.appendChild(floatBar);
   var indicatorEl = floatBar.querySelector('#__dsh_tf__indicator');
 
-  // 2. 核心毛玻璃画板面板
+  // 2. 抽屉面板 (默认隐藏)
   var panel = document.createElement('div');
   panel.id = '__dsh_tf__flow_panel';
-  panel.className = 'tf-flow-panel' + (state.visible ? ' tf-visible __dsh_tf__visible' : '');
+  panel.className = 'tf-flow-panel';
+  panel.style.display = 'none';
   panel.innerHTML = `
     <div class="tf-panel-header">
       <div class="tf-panel-title">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
         <span>思维链沉淀画板</span>
       </div>
-      <div class="tf-round-tabs" id="__dsh_tf__round_tabs">
-        <!-- 动态轮次 Tab -->
-      </div>
+      <div class="tf-round-tabs" id="__dsh_tf__round_tabs"></div>
       <div class="tf-panel-actions">
         <button class="tf-dual-toggle-btn" id="__dsh_tf__btn_dual" title="切换思考与最终回复双栏对照">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line></svg>
@@ -108,11 +108,7 @@
         </button>
       </div>
     </div>
-    <div class="tf-blocks-container" id="__dsh_tf__blocks_list">
-      <div style="text-align: center; color: var(--tf-text-muted); font-size: 13px; margin: auto;">
-        等待思维链启动推演...
-      </div>
-    </div>
+    <div class="tf-blocks-container" id="__dsh_tf__blocks_list"></div>
     <div class="tf-intervene-bar">
       <div class="tf-input-row" style="display: flex; gap: 8px; width: 100%;">
         <input type="text" class="tf-input" id="__dsh_tf__intervene_input" placeholder="针对当前思考路线提出指导意见，实时修正..." />
@@ -274,7 +270,216 @@
       .trim();
   }
 
-  // 渲染水平多轮推演画板 (Issue 5 增量与保护机制)
+  // =========================================================================
+  // 原生接管：把官方 reasoning 块就地替换为精致的 Thought Flow 磨砂卡片
+  // =========================================================================
+  var mountedElements = new WeakSet();
+
+  function buildInlineCard(round, isStreaming) {
+    var card = document.createElement('div');
+    card.className = 'tf-inline-card';
+    card.setAttribute('data-tf-mounted', 'true');
+    card.setAttribute('data-expanded', 'false');
+
+    var blocks = (round && round.blocks) || [];
+    var tools = (round && round.tools) || [];
+    var stats = (round && round.stats) || {};
+
+    var summaryText = '推演完成';
+    if (blocks.length > 0) {
+      summaryText = blocks[0].title || blocks[0].content || '推演完成';
+    }
+    if (isStreaming) summaryText = '正在深度思考推演中...';
+
+    var durationSec = stats.durationMs ? (stats.durationMs / 1000).toFixed(1) + 's' : (isStreaming ? '推演中' : '完成');
+    var pulseClass = isStreaming ? 'running' : 'done';
+
+    card.innerHTML = `
+      <div class="tf-inline-header">
+        <div class="tf-inline-title-group">
+          <div class="tf-pulse-dot ${pulseClass}"></div>
+          <div class="tf-inline-title">
+            <span>思考过程</span>
+          </div>
+          <div class="tf-inline-summary">${escapeHtml(summaryText)}</div>
+        </div>
+        <div class="tf-inline-meta">
+          <span class="tf-inline-tag">${escapeHtml(durationSec)}</span>
+          <svg class="tf-inline-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+      </div>
+      <div class="tf-inline-body">
+        <!-- 动态工具卡片 -->
+        <div class="tf-inline-tools-wrap"></div>
+        <!-- 核心步骤块 -->
+        <div class="tf-inline-steps-wrap"></div>
+        <!-- 底部元数据 -->
+        <div class="tf-inline-footer">
+          <div class="tf-inline-stats">
+            <span>🧠 ${stats.reasoningTokens || 0} tok</span>
+            <span>⏱ ${durationSec}</span>
+          </div>
+          <div style="font-size: 11px; opacity: 0.7;">点击任意步骤可就地修改</div>
+        </div>
+      </div>
+    `;
+
+    // 交互：点击 Header 展开/收起
+    var header = card.querySelector('.tf-inline-header');
+    header.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var isExp = card.getAttribute('data-expanded') === 'true';
+      card.setAttribute('data-expanded', !isExp ? 'true' : 'false');
+    });
+
+    renderInlineBody(card, round);
+    return card;
+  }
+
+  function renderInlineBody(card, round) {
+    if (!card || !round) return;
+    var toolsWrap = card.querySelector('.tf-inline-tools-wrap');
+    var stepsWrap = card.querySelector('.tf-inline-steps-wrap');
+    if (!toolsWrap || !stepsWrap) return;
+
+    var tools = round.tools || [];
+    var blocks = round.blocks || [];
+
+    // 渲染工具调用
+    if (tools.length > 0) {
+      toolsWrap.innerHTML = `
+        <details class="tf-tools-fold" ${tools.some(t => t.status === 'running') ? 'open' : ''}>
+          <summary class="tf-tools-summary">🔧 工具调用 (${tools.length} 项记录)</summary>
+          <div class="tf-tools-list"></div>
+        </details>
+      `;
+      var listEl = toolsWrap.querySelector('.tf-tools-list');
+      tools.forEach(function (t) {
+        var item = document.createElement('div');
+        item.className = 'tf-tool-item';
+        item.innerHTML = `
+          <div class="tf-tool-header">
+            <span class="tf-tool-name">⚡ ${escapeHtml(t.name || '工具')}</span>
+            <span class="tf-tool-status ${t.status || 'running'}">${t.status === 'running' ? '运行中...' : (t.status === 'success' ? '完成 ✅' : '失败 ❌')}</span>
+          </div>
+          <div class="tf-tool-detail-box">入参: ${escapeHtml(typeof t.args === 'object' ? JSON.stringify(t.args, null, 2) : String(t.args || ''))}</div>
+        `;
+        item.querySelector('.tf-tool-header').addEventListener('click', function () {
+          var box = item.querySelector('.tf-tool-detail-box');
+          box.style.display = box.style.display === 'block' ? 'none' : 'block';
+        });
+        listEl.appendChild(item);
+      });
+    } else {
+      toolsWrap.innerHTML = '';
+    }
+
+    // 渲染思考步骤
+    stepsWrap.innerHTML = '';
+    if (blocks.length === 0) {
+      stepsWrap.innerHTML = '<div style="font-size: 12px; color: var(--tf-text-muted); padding: 8px 0;">推演进行中...</div>';
+    } else {
+      blocks.forEach(function (b, idx) {
+        var blockEl = document.createElement('div');
+        blockEl.className = 'tf-step-block';
+        blockEl.innerHTML = `
+          <div class="tf-step-header">
+            <span class="tf-step-badge">
+              <span class="tf-step-num">${escapeHtml(String(b.step || (idx + 1)))}</span>
+              <span>${escapeHtml(b.title || '推演步骤')}</span>
+            </span>
+            <button class="tf-step-copy-btn" title="复制此段思考">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+          </div>
+          <div class="tf-step-content" contenteditable="true" spellcheck="false">${escapeHtml(b.content || '')}</div>
+        `;
+
+        // 复制
+        blockEl.querySelector('.tf-step-copy-btn').addEventListener('click', function (e) {
+          e.stopPropagation();
+          navigator.clipboard.writeText(b.content || '').then(function () {});
+        });
+
+        // 纯文本粘贴
+        var contentEl = blockEl.querySelector('.tf-step-content');
+        contentEl.addEventListener('paste', function (e) {
+          e.preventDefault();
+          var text = (e.clipboardData || window.clipboardData).getData('text/plain');
+          var clean = sanitizePlainText(text);
+          var sel = window.getSelection();
+          if (!sel.rangeCount) return;
+          sel.deleteFromDocument();
+          sel.getRangeAt(0).insertNode(document.createTextNode(clean));
+          sel.collapseToEnd();
+        });
+
+        // 直接编辑失焦保存
+        contentEl.addEventListener('blur', function () {
+          var newVal = sanitizePlainText(contentEl.innerText);
+          contentEl.textContent = newVal;
+          if (newVal && newVal !== b.content) {
+            b.content = newVal;
+            saveState();
+            fetch('/dsh-thought-flow/action', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'edit_block', blockId: b.id, content: newVal })
+            }).catch(function(){});
+          }
+        });
+
+        stepsWrap.appendChild(blockEl);
+      });
+    }
+  }
+
+  // 扫描并就地替换官方的思考 DOM 节点
+  function scanAndReplaceOfficialReasoning() {
+    var thinkRoots = document.querySelectorAll('[data-variant="think"], ._3GBCTG_root');
+    if (!thinkRoots || !thinkRoots.length) return;
+
+    var rounds = state.rounds || [];
+    thinkRoots.forEach(function (thinkEl, idx) {
+      if (mountedElements.has(thinkEl)) {
+        // 已挂载过，进行增量更新
+        var existingCard = thinkEl.querySelector('.tf-inline-card');
+        if (existingCard) {
+          var round = rounds[idx] || rounds[rounds.length - 1];
+          if (round) {
+            var isRunning = thinkEl.getAttribute('data-state') === 'running';
+            var summaryEl = existingCard.querySelector('.tf-inline-summary');
+            if (summaryEl && round.blocks && round.blocks.length > 0) {
+              summaryEl.textContent = isRunning ? '正在深度思考推演中...' : (round.blocks[0].title || round.blocks[0].content);
+            }
+            var dot = existingCard.querySelector('.tf-pulse-dot');
+            if (dot) {
+              dot.className = 'tf-pulse-dot ' + (isRunning ? 'running' : 'done');
+            }
+            renderInlineBody(existingCard, round);
+          }
+        }
+        return;
+      }
+
+      // 提取官方原生中的纯文本（如果有），以便立刻呈现
+      var round = rounds[idx] || rounds[rounds.length - 1];
+      var isRunning = thinkEl.getAttribute('data-state') === 'running';
+
+      var card = buildInlineCard(round, isRunning);
+      thinkEl.appendChild(card);
+      mountedElements.add(thinkEl);
+    });
+  }
+
+  // 监听 DOM 树变化，实时接管新出现的思考节点
+  var observer = new MutationObserver(function () {
+    scanAndReplaceOfficialReasoning();
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+  setTimeout(scanAndReplaceOfficialReasoning, 100);
+
+  // 渲染水平多轮推演画板 (保留状态同步逻辑)
   var lastRenderedSig = '';
   function computeRoundsSignature(rounds) {
     if (!rounds || !rounds.length) return 'empty';
@@ -639,6 +844,7 @@
       es.addEventListener('reasoning/delta', function (e) {
         var data = JSON.parse(e.data || '{}');
         appendReasoningDelta(data.roundId, data.delta);
+        scanAndReplaceOfficialReasoning();
       });
       es.addEventListener('round/update', function (e) {
         var data = JSON.parse(e.data || '{}');
@@ -702,6 +908,7 @@
             }
             saveState();
             renderRounds();
+            scanAndReplaceOfficialReasoning();
           }
         }
       })
