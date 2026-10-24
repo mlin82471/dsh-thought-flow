@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseThoughtIntoBlocks, enforceChineseRule, injectUserGuidance } from '../lib/parser.js';
-import { CHINESE_SECTION_NAME, GUIDANCE_SECTION_NAME } from '../lib/constants.js';
+import { parseThoughtIntoBlocks, enforceChineseRule, injectUserGuidance, injectThinkingFramework } from '../lib/parser.js';
+import { CHINESE_SECTION_NAME, GUIDANCE_SECTION_NAME, FRAMEWORK_SECTION_NAME, THINK_STYLES, THINK_EFFORTS } from '../lib/constants.js';
 
 test('1. parseThoughtIntoBlocks: breaks thinking into progressive steps with Chinese keywords', () => {
   const rawText = `首先分析用户的问题，了解核心需求是开发一个插件。
@@ -117,4 +117,36 @@ test('9. injectUserGuidance: correctly formats pending user interventions into p
   // 空干预数组调用时不产生副作用
   const unchanged = injectUserGuidance(sections, []);
   assert.equal(unchanged.length, 1);
+});
+
+test('10. injectThinkingFramework: injects 6-step framework with default deep_think and medium effort', () => {
+  const sections = [{ name: 'base', text: 'Base' }];
+  const updated = injectThinkingFramework(sections);
+  assert.equal(updated.length, 2);
+  const fw = updated.find(s => s.name === FRAMEWORK_SECTION_NAME);
+  assert.ok(fw);
+  assert.ok(fw.text.includes('【结构化思考框架 (6 步推演引导)】'));
+  assert.ok(fw.text.includes('1. 【重述目标】'));
+  assert.ok(fw.text.includes('2. 【边界约束】'));
+  assert.ok(fw.text.includes('3. 【关键信息】'));
+  assert.ok(fw.text.includes('4. 【方案对比】'));
+  assert.ok(fw.text.includes('5. 【不确定性】'));
+  assert.ok(fw.text.includes('6. 【执行决策】'));
+  assert.ok(fw.text.includes('深度分析'));
+  assert.ok(fw.text.includes('标准 (500-1000字)'));
+});
+
+test('11. injectThinkingFramework: correctly changes style to relational and effort to high, and is idempotent', () => {
+  const sections = [{ name: 'base', text: 'Base' }];
+  const s1 = injectThinkingFramework(sections, { style: THINK_STYLES.RELATIONAL, effort: THINK_EFFORTS.HIGH });
+  const fw1 = s1.find(s => s.name === FRAMEWORK_SECTION_NAME);
+  assert.ok(fw1.text.includes('对话反思'));
+  assert.ok(fw1.text.includes('深度 (1000-2000字)'));
+
+  // 再次注入更换努力度为 low，验证幂等且更新
+  const s2 = injectThinkingFramework(s1, { style: THINK_STYLES.DEEP_THINK, effort: THINK_EFFORTS.LOW });
+  assert.equal(s2.length, 2);
+  const fw2 = s2.find(s => s.name === FRAMEWORK_SECTION_NAME);
+  assert.ok(fw2.text.includes('深度分析'));
+  assert.ok(fw2.text.includes('简要 (≤500字)'));
 });

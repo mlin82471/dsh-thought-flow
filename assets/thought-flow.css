@@ -307,17 +307,11 @@
   gap: 6px;
 }
 
-.tf-tool-status {
-  padding: 1px 6px;
-  border-radius: 6px;
-  font-size: 10px;
-  background: rgba(120, 120, 128, 0.15);
-}
 
-.tf-tool-status.success {
-  background: rgba(52, 199, 89, 0.15);
-  color: var(--tf-success);
-}
+
+
+
+
 
 .tf-tool-detail-box {
   margin-top: 6px;
@@ -327,7 +321,7 @@
   font-size: 11px;
   white-space: pre-wrap;
   word-break: break-all;
-  display: none;
+  display: block;
 }
 
 /* 底部状态条 */
@@ -367,10 +361,8 @@
 
 #tf-float-bar,
 #__dsh_tf__float_bar,
-#tf-flow-panel,
-#__dsh_tf__flow_panel {
-  display: none !important;
-}
+
+
 
 #tf-float-bar:hover,
 #__dsh_tf__float_bar:hover {
@@ -402,86 +394,27 @@
 }
 
 /* Right Side Drawer: 优雅靠右抽屉，绝不遮挡主聊天区域和输入框 */
-#tf-flow-panel,
-#__dsh_tf__flow_panel {
-  position: fixed;
-  top: 72px;
-  right: 24px;
-  bottom: 96px;
-  width: 440px;
-  max-width: calc(100vw - 48px);
-  z-index: 999998;
-  display: flex;
-  flex-direction: column;
-  border-radius: 24px;
-  background: var(--tf-bg-glass);
-  backdrop-filter: blur(var(--tf-blur)) saturate(190%);
-  -webkit-backdrop-filter: blur(var(--tf-blur)) saturate(190%);
-  border: 1px solid var(--tf-border-glass);
-  box-shadow: var(--tf-shadow-glass);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
-  color: var(--tf-text-main);
-  overflow: hidden;
-  
-  /* 苹果风格右侧丝滑滑入 */
-  transform: translateX(calc(100% + 40px));
-  opacity: 0;
-  pointer-events: none;
-  transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.25s ease;
-}
 
-#tf-flow-panel.tf-visible,
-#__dsh_tf__flow_panel.tf-visible,
-#__dsh_tf__flow_panel.__dsh_tf__visible {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateX(0);
-}
+
+
+
+
 
 /* Header */
-.tf-panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: none;
-  background: linear-gradient(to bottom, rgba(255,255,255,0.04), transparent);
-  box-shadow: 0 1px 0 var(--tf-border-subtle);
-}
 
-.tf-panel-title {
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.3px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
 
-.tf-panel-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
 
-.tf-btn-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(120, 120, 128, 0.14);
-  color: var(--tf-text-main);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
 
-.tf-btn-icon:hover {
-  background: rgba(120, 120, 128, 0.25);
-  transform: scale(1.08);
-}
+
+
+
+
+
+
+
+
+
+
 
 /* 纵向抽屉式列表 (避免横向巨大铺开遮挡视线) */
 .tf-blocks-container {
@@ -495,132 +428,48 @@
 }
 
 /* 轮次卡片自适应抽屉宽度 */
-.tf-round-column {
-  width: 100%;
-  min-width: 0;
-  height: auto;
-  max-height: none;
-  display: flex;
-  flex-direction: column;
-  background: var(--tf-bg-glass-card);
-  border: 1px solid var(--tf-border-glass);
-  border-radius: 20px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
-  padding: 16px 18px;
-  position: relative;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
+
+
 
 .tf-round-column:hover {
   transform: translateY(-4px);
   box-shadow: 0 16px 40px var(--tf-accent-glow);
 }
 
-.tf-round-col-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--tf-border-subtle);
-}
 
-.tf-round-col-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--tf-accent);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
 
-.tf-sub-blocks-list {
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding-right: 4px;
-}
+
+
+
+
+
+
 
 /* 轮次之间的水平贯穿大箭头 */
-.tf-round-connector {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--tf-accent);
-  opacity: 0.7;
-  flex-shrink: 0;
-  animation: tf-arrow-pulse 2s infinite ease-in-out;
-}
+
+
 
 /* Thought Block (卡片内的核心思考节点) */
-.tf-block-card {
-  background: rgba(255, 255, 255, 0.4);
-  border: 1px solid var(--tf-border-subtle);
-  border-radius: 14px;
-  padding: 12px 14px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-  display: flex;
-  flex-direction: column;
-  cursor: grab;
-  transition: all 0.2s;
-  user-select: none;
-}
 
-.tf-block-card:hover {
-  background: rgba(255, 255, 255, 0.65);
-  border-color: var(--tf-accent);
-}
 
-.tf-block-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
 
-.tf-block-tag {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  font-weight: 700;
-}
 
-.tf-block-step-num {
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
-  background: var(--tf-accent);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-}
 
-.tf-block-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--tf-text-main);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 170px;
-}
 
-.tf-block-content {
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--tf-text-main);
-  opacity: 0.9;
-  word-break: break-word;
-  white-space: pre-wrap;
-  outline: none;
-  border-radius: 6px;
-  padding: 4px;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 .tf-block-content[contenteditable="true"] {
   background: rgba(0, 0, 0, 0.05);
@@ -720,10 +569,8 @@
   }
 }
 
-.tf-block-card {
-  animation: tf-stagger-in 0.36s cubic-bezier(0.25, 1, 0.5, 1) both;
-  animation-delay: calc(var(--block-idx, 0) * 40ms);
-}
+
+
 
 /* 流式打字光标 */
 .tf-typing-cursor {
@@ -743,27 +590,16 @@
 }
 
 /* 工具调用可视化卡片 (Cursor 风格) */
-.tf-tool-card {
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
-  background: rgba(0, 0, 0, 0.03);
-  border: 1px solid var(--tf-border-subtle);
-  border-radius: 12px;
-  padding: 8px 12px;
-  margin-bottom: 8px;
-  font-size: 12px;
-  transition: all 0.2s ease;
-}
+
+
 
 @media (prefers-color-scheme: dark) {
-  .tf-tool-card {
-    background: rgba(255, 255, 255, 0.04);
-  }
+  
+
 }
 
-.tf-tool-card:hover {
-  border-color: var(--tf-accent);
-  background: rgba(0, 113, 227, 0.05);
-}
+
+
 
 .tf-tool-header {
   display: flex;
@@ -774,139 +610,57 @@
   user-select: none;
 }
 
-.tf-tool-name-wrap {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 600;
-  color: var(--tf-text-main);
-}
 
-.tf-tool-status {
-  font-size: 11px;
-  padding: 2px 7px;
-  border-radius: 999px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
 
-.tf-tool-status.running {
-  background: rgba(0, 113, 227, 0.15);
-  color: var(--tf-accent);
-}
 
-.tf-tool-status.success {
-  background: rgba(52, 199, 89, 0.15);
-  color: var(--tf-success);
-}
 
-.tf-tool-status.error {
-  background: rgba(255, 59, 48, 0.15);
-  color: var(--tf-danger);
-}
 
-.tf-tool-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-}
-.tf-tool-details {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px dashed var(--tf-border-subtle);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 11px;
-  color: var(--tf-text-muted);
-  max-height: 120px;
-  overflow-y: auto;
-  white-space: pre-wrap;
-  word-break: break-all;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* 轮次底部的 Token 统计与耗时瀑布条 (Langfuse 风格) */
-.tf-stats-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 12px;
-  margin-top: auto;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.03);
-  font-size: 11px;
-  color: var(--tf-text-muted);
-  border-top: 1px solid var(--tf-border-subtle);
-}
+
+
 
 @media (prefers-color-scheme: dark) {
-  .tf-stats-bar {
-    background: rgba(255, 255, 255, 0.03);
-  }
+  
+
 }
 
-.tf-stats-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
 
-.tf-stats-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
+
+
+
+
 
 /* 思考 ↔ 回复双栏对照模式切换 */
-.tf-dual-toggle-btn {
-  padding: 4px 10px;
-  font-size: 11.5px;
-  font-weight: 600;
-  border-radius: 999px;
-  border: 1px solid var(--tf-border-glass);
-  background: rgba(120, 120, 128, 0.1);
-  color: var(--tf-text-main);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  transition: all 0.2s;
-}
+
+
 
 .tf-dual-toggle-btn:hover {
   background: rgba(120, 120, 128, 0.2);
 }
 
-.tf-dual-toggle-btn.active {
-  background: var(--tf-accent);
-  color: white;
-  border-color: var(--tf-accent);
-}
 
-.tf-reply-column {
-  width: 320px;
-  min-width: 320px;
-  height: 100%;
-  max-height: 440px;
-  display: flex;
-  flex-direction: column;
-  background: var(--tf-bg-glass-card);
-  border: 1px solid var(--tf-border-glass);
-  border-radius: 24px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-  padding: 18px 20px;
-  animation: tf-card-in 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
 
-.tf-reply-body {
-  flex: 1;
-  overflow-y: auto;
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--tf-text-main);
-  white-space: pre-wrap;
-  word-break: break-word;
-  padding-right: 4px;
-}
+
+
+
+
+
+
 
 
 /* ── 滚动条美化 ── */
@@ -925,71 +679,720 @@
 }
 
 /* ── Block 卡片 hover 微提升 ── */
-.tf-block-card {
-  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.2s ease, border-color 0.2s ease;
-}
-.tf-block-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.07), 0 2px 6px rgba(0, 0, 0, 0.04);
-  border-color: var(--tf-accent-glow);
-}
+
+
+
+
 
 /* ── Block 复制按钮 ── */
-.tf-block-header {
-  position: relative;
-}
-.tf-block-copy-btn {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
+
+
+
+
+.tf-block-card:hover 
+
+
+
+
+
+
+/* ── 已复制反馈 ── */
+
+
+
+/* ── 面板 resize 拖拽手柄 ── */
+
+
+#__dsh_tf__flow_panel:hover #__dsh_tf__resize_handle,
+#__dsh_tf__flow_panel.__dsh_tf__visible:hover 
+
+
+
+
+/* ============================================================
+   长期记忆管理面板（Hermes 风格双层记忆）
+   ============================================================ */
+
+/* 浮条上的记忆入口按钮 */
+.tf-memory-btn {
+  width: 22px;
+  height: 22px;
+  margin-left: 6px;
+  padding: 0;
   border: none;
-  background: rgba(128, 128, 140, 0.08);
-  color: var(--tf-text-muted);
+  border-radius: 7px;
+  background: rgba(128, 128, 140, 0.12);
+  color: var(--tf-text-main);
+  font-size: 12px;
+  line-height: 1;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
-  transition: opacity 0.18s ease, background 0.18s ease, color 0.18s ease;
+  transition: background 0.18s ease, transform 0.18s ease;
 }
-.tf-block-card:hover .tf-block-copy-btn { opacity: 1; }
-.tf-block-copy-btn:hover {
+.tf-memory-btn:hover {
+  background: var(--tf-accent);
+  color: #fff;
+  transform: scale(1.08);
+}
+.tf-memory-btn:active {
+  transform: scale(0.94);
+}
+
+/* 面板主体 */
+.tf-memory-panel {
+  position: fixed;
+  left: 80px;
+  bottom: 250px;
+  width: 360px;
+  max-height: min(460px, calc(100vh - 320px));
+  display: flex;
+  flex-direction: column;
+  border-radius: 18px;
+  background: var(--tf-bg-glass);
+  backdrop-filter: blur(var(--tf-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--tf-blur)) saturate(180%);
+  border: 1px solid var(--tf-border-glass);
+  box-shadow: var(--tf-shadow-glass), 0 12px 40px rgba(0, 0, 0, 0.12);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
+  color: var(--tf-text-main);
+  z-index: 2147483100;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(10px) scale(0.97);
+  pointer-events: none;
+  transition: opacity 0.22s cubic-bezier(0.25, 1, 0.5, 1),
+              transform 0.22s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.tf-memory-panel.tf-memory-open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.tf-memory-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 8px;
+}
+.tf-memory-title {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.tf-memory-close {
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--tf-text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.tf-memory-close:hover {
+  background: rgba(128, 128, 140, 0.15);
+}
+
+/* 双层记忆切换 tab */
+.tf-memory-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 0 14px 10px;
+}
+.tf-memory-tab {
+  flex: 1;
+  padding: 6px 0;
+  border: none;
+  border-radius: 8px;
+  background: rgba(128, 128, 140, 0.08);
+  color: var(--tf-text-muted);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+.tf-memory-tab.active {
   background: var(--tf-accent);
   color: #fff;
 }
-.tf-block-copy-btn:active { transform: translateY(-50%) scale(0.92); }
 
-/* ── 已复制反馈 ── */
-.tf-block-copy-btn.copied {
-  background: var(--tf-success);
+/* 用量进度条 */
+.tf-memory-usage {
+  padding: 0 14px 8px;
+}
+.tf-memory-bar {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(128, 128, 140, 0.16);
+  overflow: hidden;
+}
+.tf-memory-bar-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: var(--tf-accent);
+  transition: width 0.28s cubic-bezier(0.25, 1, 0.5, 1), background 0.2s ease;
+}
+.tf-memory-bar-fill.warn { background: #ff9f0a; }
+.tf-memory-bar-fill.danger { background: var(--tf-danger, #ff453a); }
+.tf-memory-usage-text {
+  display: block;
+  margin-top: 4px;
+  font-size: 10.5px;
+  color: var(--tf-text-muted);
+  text-align: right;
+}
+
+/* 条目列表 */
+.tf-memory-list {
+  flex: 1;
+  min-height: 60px;
+  overflow-y: auto;
+  padding: 0 14px;
+}
+.tf-memory-list::-webkit-scrollbar { width: 5px; }
+.tf-memory-list::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 140, 0.22);
+  border-radius: 999px;
+}
+.tf-memory-empty {
+  font-size: 11.5px;
+  color: var(--tf-text-muted);
+  line-height: 1.6;
+  padding: 10px 0;
+}
+.tf-memory-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border-radius: 10px;
+  background: rgba(128, 128, 140, 0.07);
+  transition: background 0.16s ease;
+}
+.tf-memory-item:hover {
+  background: rgba(128, 128, 140, 0.12);
+}
+.tf-memory-item-text {
+  flex: 1;
+  font-size: 11.5px;
+  line-height: 1.55;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+.tf-memory-del {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--tf-text-muted);
+  font-size: 10px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.16s ease, background 0.16s ease, color 0.16s ease;
+}
+.tf-memory-item:hover .tf-memory-del { opacity: 1; }
+.tf-memory-del:hover {
+  background: var(--tf-danger, #ff453a);
   color: #fff;
 }
 
-/* ── 面板 resize 拖拽手柄 ── */
-#__dsh_tf__resize_handle {
+/* 添加区 */
+.tf-memory-add {
+  display: flex;
+  gap: 8px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--tf-border-subtle);
+}
+.tf-memory-add textarea {
+  flex: 1;
+  resize: none;
+  border: 1px solid var(--tf-border-subtle);
+  border-radius: 9px;
+  padding: 7px 9px;
+  font-size: 11.5px;
+  font-family: inherit;
+  line-height: 1.5;
+  color: var(--tf-text-main);
+  background: rgba(255, 255, 255, 0.06);
+  outline: none;
+  transition: border-color 0.16s ease;
+}
+.tf-memory-add textarea:focus {
+  border-color: var(--tf-accent);
+}
+.tf-memory-add-btn {
+  flex: 0 0 auto;
+  align-self: flex-end;
+  padding: 7px 14px;
+  border: none;
+  border-radius: 9px;
+  background: var(--tf-accent);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+.tf-memory-add-btn:hover { opacity: 0.88; }
+.tf-memory-add-btn:active { transform: scale(0.96); }
+
+/* 底部开关 */
+.tf-memory-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 14px 12px;
+}
+.tf-memory-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--tf-text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+.tf-memory-switch input {
+  accent-color: var(--tf-accent);
+  cursor: pointer;
+}
+.tf-memory-hint {
+  font-size: 10px;
+  color: var(--tf-text-muted);
+  opacity: 0.75;
+  text-align: right;
+}
+
+/* 暗色模式微调 */
+@media (prefers-color-scheme: dark) {
+  .tf-memory-add textarea {
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
+
+/* ============================================================
+   内联卡片：停止按钮 + 补充指导
+   ============================================================ */
+
+.tf-inline-stop-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  margin-right: 8px;
+  border: 1px solid var(--tf-danger, #ff453a);
+  border-radius: 7px;
+  background: rgba(255, 69, 58, 0.08);
+  color: var(--tf-danger, #ff453a);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.16s ease, transform 0.14s ease;
+  white-space: nowrap;
+}
+.tf-inline-stop-btn:hover {
+  background: var(--tf-danger, #ff453a);
+  color: #fff;
+}
+.tf-inline-stop-btn:active {
+  transform: scale(0.95);
+}
+
+.tf-inline-intervene {
+  display: flex;
+  gap: 8px;
+  padding: 8px 14px 6px;
+  border-top: 1px solid var(--tf-border-subtle);
+}
+.tf-inline-intervene-input {
+  flex: 1;
+  resize: none;
+  border: 1px solid var(--tf-border-subtle);
+  border-radius: 8px;
+  padding: 6px 9px;
+  font-size: 11.5px;
+  font-family: inherit;
+  line-height: 1.45;
+  color: var(--tf-text-main);
+  background: rgba(255, 255, 255, 0.05);
+  outline: none;
+  transition: border-color 0.16s ease;
+}
+.tf-inline-intervene-input:focus {
+  border-color: var(--tf-accent);
+}
+.tf-inline-intervene-send {
+  flex: 0 0 auto;
+  align-self: flex-end;
+  padding: 6px 13px;
+  border: none;
+  border-radius: 8px;
+  background: var(--tf-accent);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.16s ease, transform 0.14s ease;
+}
+.tf-inline-intervene-send:hover {
+  opacity: 0.88;
+}
+.tf-inline-intervene-send:active {
+  transform: scale(0.95);
+}
+
+/* 工单详情截断：超过 150px 自动折叠，点击展开 */
+.tf-tool-detail-box {
+  max-height: 150px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  transition: max-height 0.28s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.tf-tool-detail-box.expanded {
+  max-height: none;
+  cursor: default;
+}
+.tf-tool-detail-box::after {
+  content: '点击展开全部';
   position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 24px 0 4px;
+  background: linear-gradient(transparent 0%, var(--tf-bg-glass) 60%);
+  font-size: 10.5px;
+  color: var(--tf-accent);
+  text-align: center;
+  pointer-events: none;
+}
+.tf-tool-detail-box.expanded::after {
+  display: none;
+}
+
+/* 指导意见一键存记忆 */
+.tf-inline-save-mem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 10.5px;
+  color: var(--tf-text-muted);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+.tf-inline-save-mem:hover { color: var(--tf-accent); }
+.tf-inline-save-mem input { accent-color: var(--tf-accent); cursor: pointer; }
+
+/* 风格/努力度标签 */
+.tf-inline-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  margin-right: 6px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+  user-select: none;
+}
+.tf-badge-style {
+  background: rgba(99, 102, 241, 0.12);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.25);
+}
+.tf-badge-effort {
+  background: rgba(34, 197, 94, 0.10);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.22);
+}
+
+/* 风格/努力度选择器 */
+.tf-memory-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--tf-border-subtle);
+}
+.tf-memory-label {
+  font-size: 12px;
+  color: var(--tf-text-muted);
+}
+.tf-memory-row select {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--tf-border-subtle);
+  background: var(--tf-bg-glass);
+  color: var(--tf-text-main);
+  outline: none;
+  cursor: pointer;
+}
+.tf-memory-row select:focus {
+  border-color: var(--tf-accent);
+}
+
+/* 记忆按钮提醒脉冲 */
+#__dsh_tf__btn_memory.tf-memory-pulse {
+  animation: tf-mem-pulse 1.2s ease-in-out 3;
+  box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.6);
+}
+@keyframes tf-mem-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.6); }
+  50%  { box-shadow: 0 0 0 8px rgba(99, 102, 241, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+}
+
+/* ── 入参默认折叠 ── */
+.tf-tool-args-fold {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--tf-text-muted);
+}
+.tf-tool-args-fold summary {
+  cursor: pointer;
+  opacity: 0.65;
+  transition: opacity 0.15s;
+  user-select: none;
+}
+.tf-tool-args-fold summary:hover { opacity: 1; }
+.tf-tool-args-body {
+  margin-top: 4px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.03);
+  font-family: monospace;
+  font-size: 10.5px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+/* ── 产物区头部 ── */
+.tf-artifact-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0 4px;
+  border-top: 1px solid var(--tf-border-subtle);
+  margin-top: 8px;
+}
+.tf-artifact-type {
+  font-size: 10.5px;
+  font-weight: 600;
+}
+.tf-artifact-type.json { color: #f59e0b; }
+.tf-artifact-type.code { color: #6366f1; }
+.tf-artifact-type.text { color: var(--tf-text-muted); }
+.tf-artifact-type.error { color: #ff453a; }
+.tf-artifact-size {
+  font-size: 10px;
+  color: var(--tf-text-muted);
+}
+.tf-artifact-expand,
+.tf-artifact-copy {
+  margin-left: auto;
+  padding: 2px 8px;
+  border: 1px solid var(--tf-border-subtle);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--tf-text-muted);
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.tf-artifact-copy { margin-left: 4px; }
+.tf-artifact-expand:hover,
+.tf-artifact-copy:hover {
+  border-color: var(--tf-accent);
+  color: var(--tf-accent);
+}
+.tf-artifact-body {
+  max-height: 200px;
+  overflow-y: auto;
+  margin: 4px 0 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.12);
+  font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.tf-artifact-body code {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* ── 全屏 Overlay 面板 ── */
+#__dsh_tf__artifact_overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+}
+#__dsh_tf__artifact_overlay.tf-overlay-open {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tf-overlay-card {
+  width: min(90vw, 1100px);
+  max-height: 85vh;
+  background: var(--tf-bg-glass);
+  border-radius: 16px;
+  border: 1px solid var(--tf-border-subtle);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.45);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.tf-overlay-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--tf-border-subtle);
+  flex-shrink: 0;
+}
+.tf-overlay-title {
+  font-size: 13px;
+  font-weight: 600;
+  flex: 1;
+}
+.tf-overlay-close {
+  padding: 4px 10px;
+  border: 1px solid var(--tf-border-subtle);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--tf-text-muted);
+  font-size: 11px;
+  cursor: pointer;
+}
+.tf-overlay-close:hover { border-color: #ff453a; color: #ff453a; }
+.tf-overlay-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 18px;
+  font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ── 侧边产物面板 ── */
+#__dsh_tf__artifact_sidebar {
+  position: fixed;
   right: 0;
+  top: 0;
   bottom: 0;
-  width: 18px;
-  height: 18px;
-  cursor: nwse-resize;
-  z-index: 10;
-  opacity: 0;
-  transition: opacity 0.2s;
+  width: 420px;
+  z-index: 99990;
+  background: var(--tf-bg-glass);
+  border-left: 1px solid var(--tf-border-subtle);
+  box-shadow: -8px 0 40px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.28s cubic-bezier(0.25, 1, 0.5, 1);
 }
-#__dsh_tf__flow_panel:hover #__dsh_tf__resize_handle,
-#__dsh_tf__flow_panel.__dsh_tf__visible:hover #__dsh_tf__resize_handle { opacity: 0.6; }
-#__dsh_tf__resize_handle::after {
-  content: '';
-  position: absolute;
-  right: 4px;
-  bottom: 4px;
-  width: 10px;
-  height: 10px;
-  border-right: 2px solid var(--tf-text-muted);
-  border-bottom: 2px solid var(--tf-text-muted);
+#__dsh_tf__artifact_sidebar.tf-sidebar-open {
+  transform: translateX(0);
 }
+.tf-sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--tf-border-subtle);
+  flex-shrink: 0;
+}
+.tf-sidebar-tabs {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  overflow-x: auto;
+}
+.tf-sidebar-tab {
+  padding: 5px 12px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--tf-text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.tf-sidebar-tab.active {
+  border-color: var(--tf-accent);
+  color: var(--tf-accent);
+  background: rgba(99,102,241,0.08);
+}
+.tf-sidebar-tab:hover:not(.active) { border-color: var(--tf-border-subtle); }
+.tf-sidebar-close {
+  padding: 4px 10px;
+  border: 1px solid var(--tf-border-subtle);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--tf-text-muted);
+  font-size: 11px;
+  cursor: pointer;
+}
+.tf-sidebar-close:hover { border-color: #ff453a; color: #ff453a; }
+.tf-sidebar-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* 复制思考按钮 */
+.tf-copy-think-btn {
+  padding: 3px 10px;
+  border: 1px solid var(--tf-border-subtle);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--tf-text-muted);
+  font-size: 10.5px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.tf-copy-think-btn:hover { border-color: var(--tf-accent); color: var(--tf-accent); }
+
+/* 记忆搜索 */
+.tf-memory-search { padding: 8px 14px 0; }
+.tf-memory-search input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--tf-border-subtle);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  color: var(--tf-text-main);
+  font-size: 11px;
+  outline: none;
+  box-sizing: border-box;
+}
+.tf-memory-search input:focus { border-color: var(--tf-accent); }
+.tf-memory-search input::placeholder { color: var(--tf-text-muted); }

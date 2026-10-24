@@ -34,6 +34,33 @@
 7. **健康诊断与日志聚合**：
    - 提供 `/dsh-thought-flow/status` 诊断接口与轻量级环形日志缓冲。
 
+## 🧠 长期记忆（Hermes 风格双层冻结快照）
+
+参考 [Hermes Agent](https://github.com/NousResearch/hermes-agent) 的生产级记忆设计，实现两层有界记忆：
+
+| 层 | 文件 | 上限 | 内容 |
+|---|---|---|---|
+| `MEMORY` | `~/.dsh/thought-flow/memory/MEMORY.md` | 2200 字符 | 项目上下文、环境事实、踩坑经验 |
+| `USER` | `~/.dsh/thought-flow/memory/USER.md` | 1375 字符 | 用户偏好、沟通习惯 |
+
+**四个省 token 的机制**：
+
+1. **硬性字符上限** —— 有界记忆本身就是压缩，迫使主动策展而非无限堆砌
+2. **格式稳定** —— 条目顺序与快照格式固定，System Prompt 前缀不变，prefix cache 才能命中
+3. **空则零开销** —— 没有记忆时不注入任何 section
+4. **使用率可视** —— 快照头部显示 `[7% — 166/2,200 chars]`，模型知道还剩多少空间
+
+写入采用 `§` 分节号分隔，超限时返回可诊断信息（当前用量、超出量、合并建议），而不是静默丢弃。
+
+## ❓ 任务前澄清提问
+
+注入一段澄清策略，引导模型在动手前对**会改变实现方向**的关键歧义主动反问：
+
+- **会问**：需求有多种合理解读、涉及删除用户数据、不可逆操作、交付物形态不明
+- **不会问**：答案能通过读代码自行确认、用户指令已明确、纯实现细节
+- 一次最多 2 个问题，每个给出 2-3 个选项并把推荐项放第一位
+- 可在记忆面板底部的开关里随时关闭
+
 ## 🌐 接口协议
 
 - `GET  /dsh-thought-flow/thought-flow.js`：前端脚本分发
@@ -42,6 +69,8 @@
 - `GET  /dsh-thought-flow/stream`：Server-Sent Events (SSE) 实时流式推送
 - `POST /dsh-thought-flow/action`：控制操作（`pause`, `resume`, `opinion`, `edit_block`, `clear`）
 - `GET  /dsh-thought-flow/status`：插件运行统计与错误日志
+- `GET  /dsh-thought-flow/memory`：读取双层记忆用量与全部条目
+- `POST /dsh-thought-flow/memory`：记忆操作（`add` / `replace` / `remove` / `clear` / `toggle_clarify`）
 
 ## 📦 安装与挂载
 
