@@ -24,7 +24,9 @@
     }
   },
   "scripts": {
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "setup": "node scripts/setup.js",
+    "install:dsh": "node scripts/setup.js"
   },
   "license": "MIT"
 }

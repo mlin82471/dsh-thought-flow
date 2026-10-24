@@ -74,15 +74,31 @@
 
 ## 📦 安装与挂载
 
-### 方式一：直接在线安装（推荐）
+### 方式一：克隆后一键配置使用（推荐，秒级生效）
+
+```bash
+git clone https://github.com/mlin82471/dsh-thought-flow.git
+cd dsh-thought-flow
+npm run setup
+```
+脚本会自动识别并写入你的 DSH 桌面配置环境，完成后完全退出重开 DSH（或在窗口内按 `Ctrl + R` 刷新）即可直接使用！
+
+---
+
+### 方式二：通过 DSH 插件管理命令安装
 
 通过 DSH 自带的插件管理命令一键拉取并安装：
 
 ```bash
-dsh plugin --profile desktop add https://github.com/mlin82471/dsh-thought-flow.git
+dsh plugin --profile desktop add github:mlin82471/dsh-thought-flow
 ```
-
-> **说明**：DSH 内置包管理器会自动解析依赖并将插件注册到 `desktop` profile 中，无需手动修改任何配置文件。
+并在 `~/.dsh/profiles/desktop/cordis.patch.yml` 中追加（若未自动挂载）：
+```yaml
+- insert:
+    - id: dsh-thought-flow
+      name: dsh-thought-flow
+```
+随后重启 DSH 即可。
 
 ---
 
