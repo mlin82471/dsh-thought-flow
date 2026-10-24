@@ -81,12 +81,13 @@ function createTestApp() {
     if (handler) handler(session, { type, data });
   }
 
-  // ── app.assemble(sections) → 触发 system-prompt/assemble ──
-  function appAssemble(sections) {
+  // ── app.assemble(sections) → 触发 system-prompt/assemble (Waterfall) ──
+  async function appAssemble(sections) {
     const handler = eventHandlers['system-prompt/assemble'];
     if (!handler) return sections;
-    const result = handler({ sections: sections.map(s => ({ ...s })) });
-    return result.sections;
+    const initial = { sections: sections.map(s => ({ ...s })) };
+    const result = await handler(initial, {}, () => Promise.resolve(initial));
+    return result ? result.sections : sections;
   }
 
   return { fetch: appFetch, emit: appEmit, assemble: appAssemble, routeMap, eventHandlers };
@@ -159,7 +160,7 @@ test('4. human intervention opinion injection into system-prompt/assemble', asyn
   assert.equal(action.body.ok, true);
 
   // DSH 触发系统提示词装配
-  const sections = app.assemble([{ name: 'system:base', text: 'Base' }]);
+  const sections = await app.assemble([{ name: 'system:base', text: 'Base' }]);
 
   const chineseSec = sections.find(s => s.name === 'thought-flow:chinese-constraint');
   const guidanceSec = sections.find(s => s.name === 'thought-flow:user-guidance');
@@ -168,7 +169,7 @@ test('4. human intervention opinion injection into system-prompt/assemble', asyn
   assert.ok(guidanceSec.text.includes('请务必使用中文'));
 
   // 验证已消费后不重复
-  const sections2 = app.assemble([{ name: 'system:base', text: 'Base' }]);
+  const sections2 = await app.assemble([{ name: 'system:base', text: 'Base' }]);
   assert.equal(sections2.find(s => s.name === 'thought-flow:user-guidance'), undefined);
 });
 
@@ -339,7 +340,7 @@ test('11. style and effort settings flow: update via /dsh-thought-flow/memory an
   assert.equal(sync.body.thinkEffort, 'high');
 
   // 5. 触发 system-prompt/assemble 验证结构化框架注入
-  const sections = app.assemble([{ name: 'base', text: 'Base' }]);
+  const sections = await app.assemble([{ name: 'base', text: 'Base' }]);
   const fw = sections.find(s => s.name === 'thought-flow:thinking-framework');
   assert.ok(fw);
   assert.ok(fw.text.includes('【结构化思考框架 (6 步推演引导)】'));

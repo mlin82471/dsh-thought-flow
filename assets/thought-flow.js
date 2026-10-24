@@ -103,19 +103,46 @@
     }
   });
 
-  // ── 侧边产物面板 ──
+  // ── 侧边产物面板与遮罩 ──
+  var sidebarBackdrop = document.createElement('div');
+  sidebarBackdrop.id = '__dsh_tf__sidebar_backdrop';
+  root.appendChild(sidebarBackdrop);
+
   var artifactSidebar = document.createElement('div');
   artifactSidebar.id = '__dsh_tf__artifact_sidebar';
   artifactSidebar.innerHTML = [
     '<div class="tf-sidebar-header">',
     '  <div class="tf-sidebar-tabs" id="__dsh_tf__sidebar_tabs"></div>',
-    '  <button class="tf-sidebar-close">✕</button>',
+    '  <button class="tf-sidebar-close" id="__dsh_tf__btn_sidebar_close" title="关闭侧边栏">✕ 关闭</button>',
     '</div>',
     '<pre class="tf-sidebar-body" id="__dsh_tf__sidebar_body"></pre>'
   ].join('\n');
   root.appendChild(artifactSidebar);
-  artifactSidebar.querySelector('.tf-sidebar-close').addEventListener('click', function () {
+
+  function closeArtifactSidebar() {
     artifactSidebar.classList.remove('tf-sidebar-open');
+    sidebarBackdrop.classList.remove('tf-backdrop-open');
+  }
+
+  sidebarBackdrop.addEventListener('click', closeArtifactSidebar);
+  var btnSbClose = artifactSidebar.querySelector('#__dsh_tf__btn_sidebar_close');
+  if (btnSbClose) {
+    btnSbClose.addEventListener('click', function (e) {
+      e.stopPropagation();
+      closeArtifactSidebar();
+    });
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      if (artifactSidebar.classList.contains('tf-sidebar-open')) {
+        closeArtifactSidebar();
+      }
+      var overlay = document.getElementById('__dsh_tf__artifact_overlay');
+      if (overlay && overlay.classList.contains('tf-overlay-open')) {
+        overlay.classList.remove('tf-overlay-open');
+      }
+    }
   });
 
   // 全局工具缓存（跨卡片共享，用于 Tab 切换）
@@ -135,6 +162,7 @@
     var idx = allToolResults.length - 1;
     switchSidebarTab(idx);
     artifactSidebar.classList.add('tf-sidebar-open');
+    sidebarBackdrop.classList.add('tf-backdrop-open');
   }
 
   function renderSidebarTabs() {
@@ -197,10 +225,11 @@
       '  <div class="tf-inline-tools-wrap"></div>',
       '  <div class="tf-inline-steps-wrap"></div>',
       '  <div class="tf-inline-intervene">',
-      '    <textarea class="tf-inline-intervene-input" placeholder="补充指导意见，回车发送…" rows="1"></textarea>',
+      '    <textarea class="tf-inline-intervene-input" placeholder="补充指导意见，回车发送… (将在下轮自动注入模型提示词)" rows="1"></textarea>',
       '    <button class="tf-inline-intervene-send">发送</button>',
       '    <label class="tf-inline-save-mem"><input type="checkbox" class="tf-inline-save-chk"> 💾 存为记忆</label>',
       '  </div>',
+      '  <div class="tf-pending-guidance-list"></div>',
       '  <div class="tf-inline-footer">',
       '    <div class="tf-inline-stats">',
       '      <span class="tf-stat-tok">🧠 0</span>',
@@ -240,9 +269,37 @@
       });
     }
 
-    // 补充指导 + 存记忆
+    // 补充指导 + 存记忆与待注入列表渲染
     var inputEl = card.querySelector('.tf-inline-intervene-input');
     var sendEl = card.querySelector('.tf-inline-intervene-send');
+    var pendingListEl = card.querySelector('.tf-pending-guidance-list');
+
+    function renderPendingGuidance(items) {
+      if (!pendingListEl) return;
+      pendingListEl.innerHTML = '';
+      if (!Array.isArray(items) || !items.length) return;
+      items.forEach(function (itm) {
+        var el = document.createElement('div');
+        el.className = 'tf-pending-guidance-item';
+        el.innerHTML = [
+          '<span class="tf-pending-badge">📌 待注入指导</span>',
+          '<span class="tf-pending-text" title="' + escapeHtml(itm.text || '') + '">' + escapeHtml(itm.text || '') + '</span>',
+          '<button class="tf-pending-del-btn" title="撤回此条意见">✕</button>'
+        ].join('');
+        el.querySelector('.tf-pending-del-btn').addEventListener('click', function (e) {
+          e.stopPropagation();
+          fetch('/dsh-thought-flow/action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'remove_opinion', id: itm.id })
+          }).then(function (r) { return r.json(); }).then(function (data) {
+            renderPendingGuidance(data.pendingInterventions || []);
+          }).catch(function () {});
+        });
+        pendingListEl.appendChild(el);
+      });
+    }
+
     if (inputEl && sendEl) {
       function doIntervene() {
         var val = inputEl.value.trim();
@@ -256,11 +313,27 @@
           }).catch(function () {});
           saveChk.checked = false;
         }
+        sendEl.disabled = true;
+        sendEl.textContent = '发送中…';
         fetch('/dsh-thought-flow/action', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'opinion', text: val })
-        }).then(function () { inputEl.value = ''; }).catch(function () {});
+        }).then(function (res) {
+          return res.json();
+        }).then(function (data) {
+          inputEl.value = '';
+          sendEl.disabled = false;
+          sendEl.textContent = '✅ 已就绪';
+          setTimeout(function () { sendEl.textContent = '发送'; }, 1800);
+          if (data && Array.isArray(data.pendingInterventions)) {
+            renderPendingGuidance(data.pendingInterventions);
+          }
+        }).catch(function () {
+          sendEl.disabled = false;
+          sendEl.textContent = '❌ 失败';
+          setTimeout(function () { sendEl.textContent = '发送'; }, 1800);
+        });
       }
       sendEl.addEventListener('click', function (e) { e.stopPropagation(); doIntervene(); });
       inputEl.addEventListener('keydown', function (e) {

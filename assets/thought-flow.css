@@ -1305,21 +1305,41 @@
   word-break: break-word;
 }
 
-/* ── 侧边产物面板 ── */
+/* ── 侧边产物面板遮罩与容器 ── */
+#__dsh_tf__sidebar_backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 99988;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease-out;
+}
+#__dsh_tf__sidebar_backdrop.tf-backdrop-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 #__dsh_tf__artifact_sidebar {
   position: fixed;
   right: 0;
-  top: 0;
+  top: 40px; /* 严格下移避开 Electron Windows 窗口控制按钮与可拖拽顶栏 */
   bottom: 0;
-  width: 420px;
+  width: 440px;
+  max-width: 90vw;
   z-index: 99990;
   background: var(--tf-bg-glass);
+  backdrop-filter: blur(var(--tf-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--tf-blur)) saturate(180%);
   border-left: 1px solid var(--tf-border-subtle);
-  box-shadow: -8px 0 40px rgba(0,0,0,0.3);
+  box-shadow: -12px 0 48px rgba(0,0,0,0.35);
   display: flex;
   flex-direction: column;
   transform: translateX(100%);
   transition: transform 0.28s cubic-bezier(0.25, 1, 0.5, 1);
+  -webkit-app-region: no-drag !important;
 }
 #__dsh_tf__artifact_sidebar.tf-sidebar-open {
   transform: translateX(0);
@@ -1327,44 +1347,64 @@
 .tf-sidebar-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 14px 16px;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--tf-border-subtle);
+  background: rgba(255, 255, 255, 0.04);
   flex-shrink: 0;
+  -webkit-app-region: no-drag !important;
 }
 .tf-sidebar-tabs {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   flex: 1;
   overflow-x: auto;
+  min-width: 0;
+  -webkit-app-region: no-drag !important;
 }
 .tf-sidebar-tab {
-  padding: 5px 12px;
-  border-radius: 7px;
-  border: 1px solid transparent;
-  background: transparent;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--tf-border-subtle);
+  background: rgba(120, 120, 128, 0.08);
   color: var(--tf-text-muted);
-  font-size: 11px;
+  font-size: 11.5px;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s;
+  flex-shrink: 0;
+  -webkit-app-region: no-drag !important;
 }
 .tf-sidebar-tab.active {
   border-color: var(--tf-accent);
   color: var(--tf-accent);
-  background: rgba(99,102,241,0.08);
+  background: rgba(0, 113, 227, 0.12);
+  font-weight: 600;
 }
-.tf-sidebar-tab:hover:not(.active) { border-color: var(--tf-border-subtle); }
+.tf-sidebar-tab:hover:not(.active) { border-color: var(--tf-accent); color: var(--tf-text-main); }
 .tf-sidebar-close {
-  padding: 4px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 12px;
   border: 1px solid var(--tf-border-subtle);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--tf-text-muted);
-  font-size: 11px;
-  cursor: pointer;
+  border-radius: 8px;
+  background: rgba(120, 120, 128, 0.12);
+  color: var(--tf-text-main);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  -webkit-app-region: no-drag !important;
 }
-.tf-sidebar-close:hover { border-color: #ff453a; color: #ff453a; }
+.tf-sidebar-close:hover {
+  border-color: #ff3b30;
+  background: rgba(255, 59, 48, 0.15);
+  color: #ff3b30;
+}
 .tf-sidebar-body {
   flex: 1;
   overflow-y: auto;
@@ -1373,7 +1413,55 @@
   font-size: 12px;
   line-height: 1.6;
   white-space: pre-wrap;
-  word-break: break-word;
+  word-break: break-all;
+  margin: 0;
+  -webkit-app-region: no-drag !important;
+}
+
+/* 待注入指导意见芯片列表 */
+.tf-pending-guidance-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.tf-pending-guidance-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(0, 113, 227, 0.08);
+  border: 1px solid rgba(0, 113, 227, 0.25);
+  font-size: 12px;
+  color: var(--tf-text-main);
+  animation: tf-expand 0.2s ease-out;
+}
+.tf-pending-guidance-item .tf-pending-badge {
+  color: var(--tf-accent);
+  font-weight: 600;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.tf-pending-guidance-item .tf-pending-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tf-pending-guidance-item .tf-pending-del-btn {
+  background: transparent;
+  border: none;
+  color: var(--tf-text-muted);
+  cursor: pointer;
+  padding: 2px 5px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+.tf-pending-guidance-item .tf-pending-del-btn:hover {
+  color: #ff3b30;
+  background: rgba(255, 59, 48, 0.1);
 }
 
 /* 复制思考按钮 */
