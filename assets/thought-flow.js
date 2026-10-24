@@ -273,58 +273,41 @@
   // =========================================================================
   // 原生接管：把官方 reasoning 块就地替换为精致的 Thought Flow 磨砂卡片
   // =========================================================================
-  var mountedElements = new WeakSet();
 
-  function buildInlineCard(round, isStreaming) {
+  function buildInlineCard(round, isRunning, roundNum) {
     var card = document.createElement('div');
     card.className = 'tf-inline-card';
     card.setAttribute('data-tf-mounted', 'true');
-    card.setAttribute('data-expanded', 'false');
-
-    var blocks = (round && round.blocks) || [];
-    var tools = (round && round.tools) || [];
-    var stats = (round && round.stats) || {};
-
-    var summaryText = '推演完成';
-    if (blocks.length > 0) {
-      summaryText = blocks[0].title || blocks[0].content || '推演完成';
-    }
-    if (isStreaming) summaryText = '正在深度思考推演中...';
-
-    var durationSec = stats.durationMs ? (stats.durationMs / 1000).toFixed(1) + 's' : (isStreaming ? '推演中' : '完成');
-    var pulseClass = isStreaming ? 'running' : 'done';
+    card.setAttribute('data-round-id', String((round && round.roundId) || roundNum || 1));
+    card.setAttribute('data-expanded', isRunning ? 'true' : 'false');
 
     card.innerHTML = `
       <div class="tf-inline-header">
         <div class="tf-inline-title-group">
-          <div class="tf-pulse-dot ${pulseClass}"></div>
+          <div class="tf-pulse-dot ${isRunning ? 'running' : 'done'}"></div>
           <div class="tf-inline-title">
             <span>思考过程</span>
           </div>
-          <div class="tf-inline-summary">${escapeHtml(summaryText)}</div>
+          <div class="tf-inline-summary">推演准备就绪...</div>
         </div>
         <div class="tf-inline-meta">
-          <span class="tf-inline-tag">${escapeHtml(durationSec)}</span>
+          <span class="tf-inline-tag">${isRunning ? '推演中' : '完成'}</span>
           <svg class="tf-inline-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </div>
       </div>
       <div class="tf-inline-body">
-        <!-- 动态工具卡片 -->
         <div class="tf-inline-tools-wrap"></div>
-        <!-- 核心步骤块 -->
         <div class="tf-inline-steps-wrap"></div>
-        <!-- 底部元数据 -->
         <div class="tf-inline-footer">
           <div class="tf-inline-stats">
-            <span>🧠 ${stats.reasoningTokens || 0} tok</span>
-            <span>⏱ ${durationSec}</span>
+            <span class="tf-stat-tok">🧠 0 tok</span>
+            <span class="tf-stat-dur">⏱ 0.0s</span>
           </div>
-          <div style="font-size: 11px; opacity: 0.7;">点击任意步骤可就地修改</div>
+          <div style="font-size: 11px; opacity: 0.65;">点击文字可就地修改思考步骤</div>
         </div>
       </div>
     `;
 
-    // 交互：点击 Header 展开/收起
     var header = card.querySelector('.tf-inline-header');
     header.addEventListener('click', function (e) {
       e.stopPropagation();
@@ -332,152 +315,217 @@
       card.setAttribute('data-expanded', !isExp ? 'true' : 'false');
     });
 
-    renderInlineBody(card, round);
+    if (round) {
+      updateCardView(card, round, isRunning);
+    }
     return card;
   }
 
-  function renderInlineBody(card, round) {
-    if (!card || !round) return;
-    var toolsWrap = card.querySelector('.tf-inline-tools-wrap');
-    var stepsWrap = card.querySelector('.tf-inline-steps-wrap');
-    if (!toolsWrap || !stepsWrap) return;
+  function computeSingleRoundSig(round, isRunning) {
+    if (!round) return '';
+    var bCount = round.blocks ? round.blocks.length : 0;
+    var tCount = round.tools ? round.tools.length : 0;
+    var totalLen = 0;
+    (round.blocks || []).forEach(function(b) { totalLen += (b.content || '').length; });
+    return [round.roundId, bCount, tCount, totalLen, isRunning ? 1 : 0].join(':');
+  }
 
-    var tools = round.tools || [];
-    var blocks = round.blocks || [];
+  function updateCardView(card, round, isRunning) {
+    if (!card || !round) return;
+
+    var pulse = card.querySelector('.tf-pulse-dot');
+    if (pulse) pulse.className = 'tf-pulse-dot ' + (isRunning ? 'running' : 'done');
+
+    var tag = card.querySelector('.tf-inline-tag');
+    var durationSec = (round.stats && round.stats.durationMs) ? (round.stats.durationMs / 1000).toFixed(1) + 's' : (isRunning ? '推演中' : '完成');
+    if (tag) tag.textContent = durationSec;
+
+    var summaryEl = card.querySelector('.tf-inline-summary');
+    if (summaryEl) {
+      if (isRunning && (!round.blocks || !round.blocks.length)) {
+        summaryEl.textContent = '正在深度思考推演中...';
+      } else if (round.blocks && round.blocks.length > 0) {
+        var first = round.blocks[0];
+        summaryEl.textContent = first.title || first.content || '推演完成';
+      } else {
+        summaryEl.textContent = '推演完成';
+      }
+    }
+
+    var tokEl = card.querySelector('.tf-stat-tok');
+    if (tokEl && round.stats) {
+      tokEl.textContent = '🧠 ' + (round.stats.reasoningTokens || round.stats.totalTokens || 0) + ' tok';
+    }
+    var durEl = card.querySelector('.tf-stat-dur');
+    if (durEl) {
+      durEl.textContent = '⏱ ' + durationSec;
+    }
+
+    // 保护：用户正在该卡片内编辑时，绝不销毁重建 DOM
+    if (card.contains(document.activeElement) && document.activeElement.getAttribute('contenteditable') === 'true') {
+      return;
+    }
+
+    // 检查内容签名是否变化，未变化则不重复渲染内部列表
+    var newSig = computeSingleRoundSig(round, isRunning);
+    if (card.getAttribute('data-sig') === newSig) {
+      return;
+    }
+    card.setAttribute('data-sig', newSig);
 
     // 渲染工具调用
-    if (tools.length > 0) {
-      toolsWrap.innerHTML = `
-        <details class="tf-tools-fold" ${tools.some(t => t.status === 'running') ? 'open' : ''}>
-          <summary class="tf-tools-summary">🔧 工具调用 (${tools.length} 项记录)</summary>
-          <div class="tf-tools-list"></div>
-        </details>
-      `;
-      var listEl = toolsWrap.querySelector('.tf-tools-list');
-      tools.forEach(function (t) {
-        var item = document.createElement('div');
-        item.className = 'tf-tool-item';
-        item.innerHTML = `
-          <div class="tf-tool-header">
-            <span class="tf-tool-name">⚡ ${escapeHtml(t.name || '工具')}</span>
-            <span class="tf-tool-status ${t.status || 'running'}">${t.status === 'running' ? '运行中...' : (t.status === 'success' ? '完成 ✅' : '失败 ❌')}</span>
-          </div>
-          <div class="tf-tool-detail-box">入参: ${escapeHtml(typeof t.args === 'object' ? JSON.stringify(t.args, null, 2) : String(t.args || ''))}</div>
+    var toolsWrap = card.querySelector('.tf-inline-tools-wrap');
+    if (toolsWrap) {
+      var tools = round.tools || [];
+      if (tools.length > 0) {
+        toolsWrap.innerHTML = `
+          <details class="tf-tools-fold" ${tools.some(t => t.status === 'running') ? 'open' : ''}>
+            <summary class="tf-tools-summary">🔧 工具调用 (${tools.length} 项记录)</summary>
+            <div class="tf-tools-list"></div>
+          </details>
         `;
-        item.querySelector('.tf-tool-header').addEventListener('click', function () {
-          var box = item.querySelector('.tf-tool-detail-box');
-          box.style.display = box.style.display === 'block' ? 'none' : 'block';
+        var listEl = toolsWrap.querySelector('.tf-tools-list');
+        tools.forEach(function (t) {
+          var item = document.createElement('div');
+          item.className = 'tf-tool-item';
+          item.innerHTML = `
+            <div class="tf-tool-header">
+              <span class="tf-tool-name">⚡ ${escapeHtml(t.name || '工具')}</span>
+              <span class="tf-tool-status ${t.status || 'running'}">${t.status === 'running' ? '运行中...' : (t.status === 'success' ? '完成 ✅' : '失败 ❌')}</span>
+            </div>
+            <div class="tf-tool-detail-box">入参: ${escapeHtml(typeof t.args === 'object' ? JSON.stringify(t.args, null, 2) : String(t.args || ''))}</div>
+          `;
+          item.querySelector('.tf-tool-header').addEventListener('click', function () {
+            var box = item.querySelector('.tf-tool-detail-box');
+            box.style.display = box.style.display === 'block' ? 'none' : 'block';
+          });
+          listEl.appendChild(item);
         });
-        listEl.appendChild(item);
-      });
-    } else {
-      toolsWrap.innerHTML = '';
+      } else {
+        toolsWrap.innerHTML = '';
+      }
     }
 
     // 渲染思考步骤
-    stepsWrap.innerHTML = '';
-    if (blocks.length === 0) {
-      stepsWrap.innerHTML = '<div style="font-size: 12px; color: var(--tf-text-muted); padding: 8px 0;">推演进行中...</div>';
-    } else {
-      blocks.forEach(function (b, idx) {
-        var blockEl = document.createElement('div');
-        blockEl.className = 'tf-step-block';
-        blockEl.innerHTML = `
-          <div class="tf-step-header">
-            <span class="tf-step-badge">
-              <span class="tf-step-num">${escapeHtml(String(b.step || (idx + 1)))}</span>
-              <span>${escapeHtml(b.title || '推演步骤')}</span>
-            </span>
-            <button class="tf-step-copy-btn" title="复制此段思考">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            </button>
-          </div>
-          <div class="tf-step-content" contenteditable="true" spellcheck="false">${escapeHtml(b.content || '')}</div>
-        `;
+    var stepsWrap = card.querySelector('.tf-inline-steps-wrap');
+    if (stepsWrap) {
+      stepsWrap.innerHTML = '';
+      var blocks = round.blocks || [];
+      if (blocks.length === 0) {
+        stepsWrap.innerHTML = '<div style="font-size: 12px; color: var(--tf-text-muted); padding: 8px 0;">推演进行中...</div>';
+      } else {
+        blocks.forEach(function (b, idx) {
+          var blockEl = document.createElement('div');
+          blockEl.className = 'tf-step-block';
+          blockEl.innerHTML = `
+            <div class="tf-step-header">
+              <span class="tf-step-badge">
+                <span class="tf-step-num">${escapeHtml(String(b.step || (idx + 1)))}</span>
+                <span>${escapeHtml(b.title || '推演步骤')}</span>
+              </span>
+              <button class="tf-step-copy-btn" title="复制此段思考">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              </button>
+            </div>
+            <div class="tf-step-content" contenteditable="true" spellcheck="false">${escapeHtml(b.content || '')}</div>
+          `;
 
-        // 复制
-        blockEl.querySelector('.tf-step-copy-btn').addEventListener('click', function (e) {
-          e.stopPropagation();
-          navigator.clipboard.writeText(b.content || '').then(function () {});
+          // 复制
+          blockEl.querySelector('.tf-step-copy-btn').addEventListener('click', function (e) {
+            e.stopPropagation();
+            navigator.clipboard.writeText(b.content || '').then(function () {});
+          });
+
+          // 纯文本粘贴
+          var contentEl = blockEl.querySelector('.tf-step-content');
+          contentEl.addEventListener('paste', function (e) {
+            e.preventDefault();
+            var text = (e.clipboardData || window.clipboardData).getData('text/plain');
+            var clean = sanitizePlainText(text);
+            var sel = window.getSelection();
+            if (!sel.rangeCount) return;
+            sel.deleteFromDocument();
+            sel.getRangeAt(0).insertNode(document.createTextNode(clean));
+            sel.collapseToEnd();
+          });
+
+          // 直接编辑失焦保存
+          contentEl.addEventListener('blur', function () {
+            var newVal = sanitizePlainText(contentEl.innerText);
+            contentEl.textContent = newVal;
+            if (newVal && newVal !== b.content) {
+              b.content = newVal;
+              saveState();
+              fetch('/dsh-thought-flow/action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'edit_block', blockId: b.id, content: newVal })
+              }).catch(function(){});
+            }
+          });
+
+          stepsWrap.appendChild(blockEl);
         });
-
-        // 纯文本粘贴
-        var contentEl = blockEl.querySelector('.tf-step-content');
-        contentEl.addEventListener('paste', function (e) {
-          e.preventDefault();
-          var text = (e.clipboardData || window.clipboardData).getData('text/plain');
-          var clean = sanitizePlainText(text);
-          var sel = window.getSelection();
-          if (!sel.rangeCount) return;
-          sel.deleteFromDocument();
-          sel.getRangeAt(0).insertNode(document.createTextNode(clean));
-          sel.collapseToEnd();
-        });
-
-        // 直接编辑失焦保存
-        contentEl.addEventListener('blur', function () {
-          var newVal = sanitizePlainText(contentEl.innerText);
-          contentEl.textContent = newVal;
-          if (newVal && newVal !== b.content) {
-            b.content = newVal;
-            saveState();
-            fetch('/dsh-thought-flow/action', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ action: 'edit_block', blockId: b.id, content: newVal })
-            }).catch(function(){});
-          }
-        });
-
-        stepsWrap.appendChild(blockEl);
-      });
+      }
     }
   }
 
-  // 扫描并就地替换官方的思考 DOM 节点
-  function scanAndReplaceOfficialReasoning() {
-    var thinkRoots = document.querySelectorAll('[data-variant="think"], ._3GBCTG_root');
-    if (!thinkRoots || !thinkRoots.length) return;
-
-    var rounds = state.rounds || [];
-    thinkRoots.forEach(function (thinkEl, idx) {
-      if (mountedElements.has(thinkEl)) {
-        // 已挂载过，进行增量更新
-        var existingCard = thinkEl.querySelector('.tf-inline-card');
-        if (existingCard) {
-          var round = rounds[idx] || rounds[rounds.length - 1];
-          if (round) {
-            var isRunning = thinkEl.getAttribute('data-state') === 'running';
-            var summaryEl = existingCard.querySelector('.tf-inline-summary');
-            if (summaryEl && round.blocks && round.blocks.length > 0) {
-              summaryEl.textContent = isRunning ? '正在深度思考推演中...' : (round.blocks[0].title || round.blocks[0].content);
-            }
-            var dot = existingCard.querySelector('.tf-pulse-dot');
-            if (dot) {
-              dot.className = 'tf-pulse-dot ' + (isRunning ? 'running' : 'done');
-            }
-            renderInlineBody(existingCard, round);
-          }
-        }
-        return;
-      }
-
-      // 提取官方原生中的纯文本（如果有），以便立刻呈现
-      var round = rounds[idx] || rounds[rounds.length - 1];
-      var isRunning = thinkEl.getAttribute('data-state') === 'running';
-
-      var card = buildInlineCard(round, isRunning);
-      thinkEl.appendChild(card);
-      mountedElements.add(thinkEl);
+  // 仅挂载未挂载的思考节点（MutationObserver 调用，单向幂等，绝无重入循环）
+  var mountScheduled = false;
+  function scheduleMountCheck() {
+    if (mountScheduled) return;
+    mountScheduled = true;
+    requestAnimationFrame(function () {
+      mountScheduled = false;
+      mountPendingThinkNodes();
     });
   }
 
-  // 监听 DOM 树变化，实时接管新出现的思考节点
+  function mountPendingThinkNodes() {
+    // 严格只匹配尚未挂载的节点！
+    var unmounted = document.querySelectorAll(
+      '[data-variant="think"]:not([data-tf-has-card="true"]), ._3GBCTG_root:not([data-tf-has-card="true"])'
+    );
+    if (!unmounted || !unmounted.length) return;
+
+    var allRoots = Array.from(document.querySelectorAll('[data-variant="think"], ._3GBCTG_root'));
+    var rounds = state.rounds || [];
+
+    unmounted.forEach(function (thinkEl) {
+      // 标记已挂载，杜绝再次查询命中
+      thinkEl.setAttribute('data-tf-has-card', 'true');
+
+      var idx = allRoots.indexOf(thinkEl);
+      var round = (idx >= 0 && rounds[idx]) || rounds[rounds.length - 1];
+      var isRunning = thinkEl.getAttribute('data-state') === 'running';
+
+      var card = buildInlineCard(round, isRunning, idx >= 0 ? (idx + 1) : 1);
+      thinkEl.appendChild(card);
+    });
+  }
+
+  // 更新所有已挂载卡片内容（仅由 SSE / 轮询数据更新驱动，严禁在 MutationObserver 中触发）
+  function updateAllMountedCards() {
+    mountPendingThinkNodes();
+    var allCards = document.querySelectorAll('.tf-inline-card');
+    if (!allCards.length) return;
+
+    var rounds = state.rounds || [];
+    allCards.forEach(function (card, idx) {
+      var roundId = parseInt(card.getAttribute('data-round-id'), 10);
+      var round = (roundId && rounds.find(r => r.roundId === roundId)) || rounds[idx] || rounds[rounds.length - 1];
+      var parent = card.parentElement;
+      var isRunning = parent ? (parent.getAttribute('data-state') === 'running') : false;
+      updateCardView(card, round, isRunning);
+    });
+  }
+
+  // DOM 观察器：只通过 requestAnimationFrame 调度 mountPendingThinkNodes，永不触发内容更新
   var observer = new MutationObserver(function () {
-    scanAndReplaceOfficialReasoning();
+    scheduleMountCheck();
   });
   observer.observe(document.body, { childList: true, subtree: true });
-  setTimeout(scanAndReplaceOfficialReasoning, 100);
+  setTimeout(scheduleMountCheck, 100);
 
   // 渲染水平多轮推演画板 (保留状态同步逻辑)
   var lastRenderedSig = '';
@@ -744,23 +792,26 @@
         content: deltaText,
         timestamp: Date.now()
       });
-      renderRounds();
+      updateAllMountedCards();
       return;
     }
 
     var lastBlock = round.blocks[round.blocks.length - 1];
     lastBlock.content += deltaText;
 
-    var rIdx = state.rounds.indexOf(round);
-    var col = document.getElementById('__dsh_tf__col_' + rIdx);
-    if (col) {
-      var lastContentEl = col.querySelector('.tf-block-card:last-child .tf-block-content');
-      if (lastContentEl && document.activeElement !== lastContentEl) {
-        lastContentEl.textContent = lastBlock.content;
+    // 增量更新最后一个卡片的文本，避免全量重建
+    var allCards = document.querySelectorAll('.tf-inline-card');
+    var activeCard = allCards[allCards.length - 1];
+    if (activeCard) {
+      var lastStepContent = activeCard.querySelector('.tf-step-block:last-child .tf-step-content');
+      if (lastStepContent && document.activeElement !== lastStepContent) {
+        lastStepContent.textContent = lastBlock.content;
+        var summary = activeCard.querySelector('.tf-inline-summary');
+        if (summary) summary.textContent = '正在深度思考推演中...';
         return;
       }
     }
-    renderRounds();
+    updateAllMountedCards();
   }
 
   // 方向一: SSE 实时长连接
@@ -775,7 +826,7 @@
         if (data.rounds && data.rounds.length) {
           if (!state.rounds.length) {
             state.rounds = data.rounds;
-            renderRounds();
+            updateAllMountedCards();
           } else {
             // 本地已有数据，仅合并补充缺失轮次，保留用户编辑
             data.rounds.forEach(function(sr) {
@@ -789,7 +840,7 @@
                 exists.finalReply = sr.finalReply;
               }
             });
-            renderRounds();
+            updateAllMountedCards();
           }
         }
       });
@@ -801,8 +852,8 @@
           if (!exists) {
             state.rounds.push(data.round);
             state.activeRoundIndex = state.rounds.length - 1;
-            renderRounds();
           }
+          updateAllMountedCards();
         }
       });
       es.addEventListener('turn/end', function (e) {
@@ -816,7 +867,7 @@
             if (data.round.stats) existing.stats = data.round.stats;
             if (data.round.finalReply) existing.finalReply = data.round.finalReply;
             saveState();
-            renderRounds();
+            updateAllMountedCards();
           }
         }
       });
@@ -827,7 +878,7 @@
           if (!round.tools) round.tools = [];
           round.tools.push(data.tool);
           saveState();
-          renderRounds();
+          updateAllMountedCards();
         }
       });
       es.addEventListener('tool/end', function (e) {
@@ -838,13 +889,12 @@
           if (tIdx !== -1) round.tools[tIdx] = data.tool;
           else round.tools.push(data.tool);
           saveState();
-          renderRounds();
+          updateAllMountedCards();
         }
       });
       es.addEventListener('reasoning/delta', function (e) {
         var data = JSON.parse(e.data || '{}');
         appendReasoningDelta(data.roundId, data.delta);
-        scanAndReplaceOfficialReasoning();
       });
       es.addEventListener('round/update', function (e) {
         var data = JSON.parse(e.data || '{}');
@@ -860,7 +910,7 @@
             state.rounds.push(data.round);
           }
           saveState();
-          renderRounds();
+          updateAllMountedCards();
         }
       });
       es.onerror = function () {
@@ -888,7 +938,6 @@
       .then(function (data) {
         if (!data) return;
 
-        // 仅静默更新胶囊状态，绝不自动强行弹窗遮挡用户视线
         if (data.isThinking && indicatorEl) {
           indicatorEl.textContent = '思考中...';
         }
@@ -907,8 +956,7 @@
               state.activeRoundIndex = Math.max(0, state.rounds.length - 1);
             }
             saveState();
-            renderRounds();
-            scanAndReplaceOfficialReasoning();
+            updateAllMountedCards();
           }
         }
       })

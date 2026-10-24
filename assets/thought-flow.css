@@ -32,8 +32,8 @@
 }
 
 /* 隐藏官方原生简陋的灰色 reasoning 折叠块 */
-[data-variant="think"] > div:not([data-tf-mounted="true"]),
-._3GBCTG_root > div:not([data-tf-mounted="true"]) {
+[data-variant="think"] > :not(.tf-inline-card),
+._3GBCTG_root > :not(.tf-inline-card) {
   display: none !important;
 }
 
