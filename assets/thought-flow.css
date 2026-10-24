@@ -31,17 +31,26 @@
   }
 }
 
-/* 隐藏官方原生简陋的灰色 reasoning 折叠块 */
+/* 隐藏官方原生简陋的灰色 reasoning 折叠块与整个 turnProcess 默认折叠条 */
 [data-variant="think"] > :not(.tf-inline-card),
-._3GBCTG_root > :not(.tf-inline-card) {
+._3GBCTG_root > :not(.tf-inline-card),
+[data-turn-process] > :not(.tf-inline-card),
+._4AI11G_root > :not(.tf-inline-card) {
   display: none !important;
 }
 
 /* 确保父容器无缝贴合我们的组件 */
 [data-variant="think"],
-._3GBCTG_root {
+._3GBCTG_root,
+[data-turn-process],
+._4AI11G_root {
   contain: none !important;
   height: auto !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  width: 100% !important;
+  cursor: default !important;
   margin-bottom: 14px !important;
 }
 

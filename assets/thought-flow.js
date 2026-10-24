@@ -691,25 +691,32 @@
   }
 
   function mountPendingThinkNodes() {
-  _lastIncBlockCount = 0;
-    // 严格只匹配尚未挂载的节点！
+    _lastIncBlockCount = 0;
+    // 严格匹配尚未挂载的节点：兼容 [data-turn-process]（整轮折叠条）与 [data-variant="think"]（行内推理块）
     var unmounted = document.querySelectorAll(
-      '[data-variant="think"]:not([data-tf-has-card="true"]), ._3GBCTG_root:not([data-tf-has-card="true"])'
+      '[data-turn-process]:not([data-tf-has-card="true"]), [data-variant="think"]:not([data-tf-has-card="true"]), ._4AI11G_root:not([data-tf-has-card="true"]), ._3GBCTG_root:not([data-tf-has-card="true"])'
     );
     if (!unmounted || !unmounted.length) return;
 
-    var allRoots = Array.from(document.querySelectorAll('[data-variant="think"], ._3GBCTG_root'));
+    var allRoots = Array.from(document.querySelectorAll('[data-turn-process], [data-variant="think"], ._4AI11G_root, ._3GBCTG_root'));
     var rounds = state.rounds || [];
 
     unmounted.forEach(function (thinkEl) {
-      // 标记已挂载，杜绝再次查询命中
+      // 避免重复嵌套：如果祖先节点已被挂载，子级不重复插入
+      if (thinkEl.closest('[data-tf-has-card="true"]')) {
+        thinkEl.setAttribute('data-tf-has-card', 'true');
+        return;
+      }
       thinkEl.setAttribute('data-tf-has-card', 'true');
 
+      // 从 data-turn-process 属性优先提取 roundId
+      var turnAttr = thinkEl.getAttribute('data-turn-process');
+      var turnNum = turnAttr ? parseInt(turnAttr, 10) : NaN;
       var idx = allRoots.indexOf(thinkEl);
-      var round = (idx >= 0 && rounds[idx]) || rounds[rounds.length - 1];
-      var isRunning = thinkEl.getAttribute('data-state') === 'running';
+      var round = (!isNaN(turnNum) && rounds.find(r => r.roundId === turnNum)) || (idx >= 0 && rounds[idx]) || rounds[rounds.length - 1];
+      var isRunning = thinkEl.getAttribute('data-state') === 'running' || thinkEl.getAttribute('data-open') === 'true';
 
-      var card = buildInlineCard(round, isRunning, idx >= 0 ? (idx + 1) : 1);
+      var card = buildInlineCard(round, isRunning, !isNaN(turnNum) ? turnNum : (idx >= 0 ? (idx + 1) : 1));
       thinkEl.appendChild(card);
     });
   }
