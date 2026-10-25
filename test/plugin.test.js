@@ -12,6 +12,8 @@ import { ROUTES } from '../lib/constants.js';
 function createTestApp() {
   const routeMap = new Map();
   const eventHandlers = {};
+  const registeredTabs = [];
+  const registeredTools = [];
 
   // 模拟 DSH cordis 环境
   const ctx = {
@@ -22,14 +24,38 @@ function createTestApp() {
       },
       effect(fn) { return fn(); },
       inject(deps, fn) {
-        fn({
-          webServer: {
+        const injected = {};
+        if (deps.includes('webServer')) {
+          injected.webServer = {
             register(route) {
               routeMap.set(route.path, route);
               return () => { routeMap.delete(route.path); };
             }
-          }
-        });
+          };
+        }
+        if (deps.includes('betterSidebar')) {
+          injected.betterSidebar = {
+            registerTab(descriptor) {
+              registeredTabs.push(descriptor);
+              return () => {
+                const idx = registeredTabs.indexOf(descriptor);
+                if (idx !== -1) registeredTabs.splice(idx, 1);
+              };
+            }
+          };
+        }
+        if (deps.includes('tools')) {
+          injected.tools = {
+            register(toolDef) {
+              registeredTools.push(toolDef);
+              return () => {
+                const idx = registeredTools.indexOf(toolDef);
+                if (idx !== -1) registeredTools.splice(idx, 1);
+              };
+            }
+          };
+        }
+        fn(injected);
       }
     }
   };
@@ -90,7 +116,7 @@ function createTestApp() {
     return result ? result.sections : sections;
   }
 
-  return { fetch: appFetch, emit: appEmit, assemble: appAssemble, routeMap, eventHandlers };
+  return { fetch: appFetch, emit: appEmit, assemble: appAssemble, routeMap, eventHandlers, registeredTabs, registeredTools };
 }
 
 // ═══════════════════════════════════════════════════════
@@ -346,4 +372,32 @@ test('11. style and effort settings flow: update via /dsh-thought-flow/memory an
   assert.ok(fw.text.includes('【结构化思考框架 (6 步推演引导)】'));
   assert.ok(fw.text.includes('对话反思'));
   assert.ok(fw.text.includes('深度 (1000-2000字)'));
+});
+
+test('12. betterSidebar ecosystem integration: registers tab into betterSidebar registry when available', () => {
+  const app = createTestApp();
+  assert.equal(app.registeredTabs.length, 1);
+  const tab = app.registeredTabs[0];
+  assert.equal(tab.id, 'thought-flow:artifacts');
+  assert.equal(tab.title(), '🧠 思考工单与产物');
+  assert.ok(tab.description().includes('查看本轮推理产物'));
+  assert.equal(tab.order, 48);
+});
+
+test('13. LLM tool integration: registers thought_flow_open_artifact for model-driven drawer opening', async () => {
+  const app = createTestApp();
+  assert.equal(app.registeredTools.length, 1);
+  const tool = app.registeredTools[0];
+  assert.equal(tool.name, 'thought_flow_open_artifact');
+  assert.ok(tool.description.includes('在 DSH 侧边栏中为用户高亮展开当前推理生成的工单产物'));
+  assert.ok(tool.parameters.properties.title);
+  assert.ok(tool.parameters.properties.content);
+
+  const res = await tool.execute({
+    title: '系统故障分析 JSON',
+    content: '{"error": "EADDRNOTAVAIL"}',
+    type: 'json'
+  });
+  assert.equal(res.ok, true);
+  assert.ok(res.message.includes('系统故障分析 JSON'));
 });

@@ -112,12 +112,44 @@
   artifactSidebar.id = '__dsh_tf__artifact_sidebar';
   artifactSidebar.innerHTML = [
     '<div class="tf-sidebar-header">',
+    '  <div class="tf-sidebar-title-badge">⚡ 思考工单</div>',
     '  <div class="tf-sidebar-tabs" id="__dsh_tf__sidebar_tabs"></div>',
+    '  <button class="tf-sidebar-action-btn" id="__dsh_tf__btn_sidebar_copy" title="复制内容">📋 复制</button>',
     '  <button class="tf-sidebar-close" id="__dsh_tf__btn_sidebar_close" title="关闭侧边栏">✕ 关闭</button>',
     '</div>',
     '<pre class="tf-sidebar-body" id="__dsh_tf__sidebar_body"></pre>'
   ].join('\n');
   root.appendChild(artifactSidebar);
+
+  function adjustSidebarPosition() {
+    // 智能探测 DSH 原生右侧工作台或 dsh-better-sidebar
+    var selectors = [
+      '#better-sidebar-root',
+      '.dsh-sidebar-right',
+      '[data-pane="right"]',
+      'aside[class*="sidebar"]',
+      'div[class*="sidebarRight"]'
+    ];
+    var offsetRight = 0;
+    for (var i = 0; i < selectors.length; i++) {
+      var el = document.querySelector(selectors[i]);
+      if (el && el.offsetWidth > 40 && window.getComputedStyle(el).display !== 'none') {
+        var rect = el.getBoundingClientRect();
+        if (rect.right >= window.innerWidth - 15 && rect.width > 40) {
+          offsetRight = Math.max(offsetRight, rect.width);
+        }
+      }
+    }
+    if (offsetRight > 0) {
+      artifactSidebar.style.right = (offsetRight + 2) + 'px';
+      artifactSidebar.setAttribute('data-tf-docked', 'side-by-side');
+    } else {
+      artifactSidebar.style.right = '0px';
+      artifactSidebar.removeAttribute('data-tf-docked');
+    }
+  }
+
+  window.addEventListener('resize', adjustSidebarPosition);
 
   function closeArtifactSidebar() {
     artifactSidebar.classList.remove('tf-sidebar-open');
@@ -130,6 +162,20 @@
     btnSbClose.addEventListener('click', function (e) {
       e.stopPropagation();
       closeArtifactSidebar();
+    });
+  }
+
+  var btnCopy = artifactSidebar.querySelector('#__dsh_tf__btn_sidebar_copy');
+  if (btnCopy) {
+    btnCopy.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var body = document.getElementById('__dsh_tf__sidebar_body');
+      if (body && body.textContent) {
+        navigator.clipboard.writeText(body.textContent).then(function () {
+          btnCopy.textContent = '✅ 已复制';
+          setTimeout(function () { btnCopy.textContent = '📋 复制'; }, 1500);
+        }).catch(function () {});
+      }
     });
   }
 
@@ -161,6 +207,7 @@
     renderSidebarTabs();
     var idx = allToolResults.length - 1;
     switchSidebarTab(idx);
+    adjustSidebarPosition();
     artifactSidebar.classList.add('tf-sidebar-open');
     sidebarBackdrop.classList.add('tf-backdrop-open');
   }
@@ -965,6 +1012,19 @@
           saveState();
           updateAllMountedCards();
         }
+      });
+      es.addEventListener('tool/open_artifact', function (e) {
+        try {
+          var data = JSON.parse(e.data || '{}');
+          if (data && data.title && data.content) {
+            openToolInSidebar({
+              id: 'art-' + Date.now(),
+              name: data.title,
+              result: data.content,
+              kind: data.type || 'text'
+            });
+          }
+        } catch (err) {}
       });
       es.addEventListener('reasoning/delta', function (e) {
         var data = JSON.parse(e.data || '{}');
